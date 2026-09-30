@@ -2,7 +2,7 @@
 .venv/
 
 # Python bytecode and caches
-_pycache_/
+__pycache__/
 *.pyc
 
 # Secrets (API keys)
