@@ -1,6 +1,6 @@
 import requests
 
-url = f"https://tfl.gov.uk"
+url = "https://api.tfl.gov.uk/Line/Mode/bus"
 
 # make the api call
 try:
