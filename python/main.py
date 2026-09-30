@@ -3,29 +3,32 @@ import pandas as pd
 
 BASE_URL = "https://api.tfl.gov.uk"
 
-# filters to only bus routes, doesn't include other modes of transport
-bus_route_url = BASE_URL + "/Line/Mode/bus"
+def get_json(path):
+    """
+    Fetch BASE_URL + path and return the JSON response.
+    Raise requests.exceptions.RequestException for any request errors.
+    """
+    response = requests.get(f"{BASE_URL}{path}", timeout=10)
+    response.raise_for_status()  # Raise an error for bad responses
+    return response.json()
 
-# make the api call
-try:
-    response = requests.get(bus_route_url)
-    response.raise_for_status()  # Raise an error for bad responses 
-    # get the raw JSON response
-    data = response.json()
-except requests.exceptions.RequestException as e:
-    print(f"An error occurred: {e}")
+def get_bus_routes():
+    """
+    Fetch all bus routes from the TFL API.
+    Returns a list of bus route dictionaries.
+    """
+    return get_json("/Line/Mode/bus")
 
-def get_routes_from_start_point(start_point_id):
-    specific_start_point_url = f"{BASE_URL}/StopPoint/{start_point_id}"
+def get_stop_point(stop_point_id):
+    return get_json(f"/StopPoint/{stop_point_id}")
+
+def main():
     try:
-        response = requests.get(specific_start_point_url)
-        response.raise_for_status()  # Raise an error for bad responses 
-        # get the raw JSON response
-        start_point_data = response.json()
-        return start_point_data
+        stop = get_stop_point("490008660N")  # Example stop point ID
     except requests.exceptions.RequestException as e:
-        print(f"An error occurred: {e}")
-        return None
+        print(f"Error fetching stop point: {e}")
+        return
+    print(stop.keys())
 
-routes_example = get_routes_from_start_point("490008660N")  # Example start point ID
-print(routes_example)
+if __name__ == "__main__":
+    main()
