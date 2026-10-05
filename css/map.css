@@ -1,0 +1,13 @@
+/* formatting the maps*/
+
+.map-container {
+    width: 80vw;
+    position: relative;
+    padding-bottom: 100%;
+}
+
+
+.map-container iframe {
+    width: 100%;
+    height: 100%;
+}
