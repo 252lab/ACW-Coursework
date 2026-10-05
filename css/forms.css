@@ -1,0 +1,23 @@
+/* formatting for the forms */
+
+/* text field inputs */
+input {
+    width: 70%;
+    padding: 2%;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+/* form submit button */
+input[type=button],
+input[type=submit] {
+    background-color: darkgray;
+    border: none;
+    color: black;
+    font-family: Arial, Helvetica, sans-serif;
+    width: 30%;
+}
+
+button:hover {
+    background-color: darkred;
+}
