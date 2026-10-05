@@ -10,6 +10,10 @@
 <!-- header-->
 
 <head style="font-family: Arial, Helvetica, sans-serif; background-color: #DA291C;">
+    <!-- meta tags for formatting-->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <h1 style="color: white; text-align: center;"> London Bus Route Planner</h1>
 </head>
 
@@ -32,15 +36,22 @@ Map
 -->
 
 <body style="font-family: Arial, Helvetica, sans-serif; background-color: #DA291C;">
-    
+
     <div class="padding" class="row">
         <div class="column" style="background-color: white;">
             <!-- form here-->
-             <p>column 1</p>
+            <p>column 1</p>
         </div>
+
+        <!-- the column where the map is-->
         <div class="column">
-            <!-- map here-->
-             <p> column 2</p>
+            <!-- centering the map-->
+            <div style="text-align: center;">
+                <!-- importing and formatting the map-->
+                <iframe src=https://miqell24.github.io/london-bus-map/ width=75%
+                    height=75% style="border:0;" allowfullscreen="" loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
         </div>
     </div>
 </body>
