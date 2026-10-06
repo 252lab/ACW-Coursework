@@ -3,6 +3,7 @@
 .map-container {
     width: 100%;
     max-width: 800px;
+    max-height: 400px;
     position: relative;
     padding-bottom: 100%;
     display: flex;
