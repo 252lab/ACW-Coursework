@@ -1,9 +1,11 @@
 /* formatting the maps*/
 
 .map-container {
-    width: 80vw;
+    width: 80%;
+    max-width: 500px;
     position: relative;
     padding-bottom: 100%;
+    aspect-ratio: 1/1;
 }
 
 
