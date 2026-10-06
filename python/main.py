@@ -16,12 +16,14 @@ def get_list_of_stops(routes):
     Returns an ordered list of stops from the routes.
     """
     stops = []
-    for route in routes():
+    for route in routes:
         for i in range(len(route)-1):
             stops.append(route[i])
     stops.sort()
     stops = set(stops)
     return stops
+
+print(get_list_of_stops([route_A, route_B, route_C, route_D]))
 
 def construct_graph(routes):
     """
@@ -95,12 +97,16 @@ def access_stop_point():
     print(stop.keys())
 
 def main():
+    '''
     # Example usage of the find_route function
     graph = example_graph  # Use the predefined example graph
     start = "StopA"
     destination = "StopD"
     route = find_route(graph, start, destination)
     print("Route found:", route)
+    '''
+    routes = [route_A, route_B, route_C, route_D]
+    print(get_list_of_stops(routes))
 
 if __name__ == "__main__":
     main()
