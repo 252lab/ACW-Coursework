@@ -28,6 +28,7 @@ def construct_graph(routes, stops):
     """
     Construct a dictionary-based graph from a list of routes.
     Each stop is a key, and its value is a list of stops it connects to.
+    Not allowing bidirectional travel.
     (currently a placeholder!)
     """
     graph = {}
@@ -35,9 +36,12 @@ def construct_graph(routes, stops):
     for stop in stops:
         graph[stop] = []
     for route in routes:
-        
-    
-        
+        for i in range(len(route) - 1):
+            graph[route[i]].append(route[i + 1])
+    # remove any duplicates 
+    for stop in graph:
+        graph[stop] = list(sorted(set(graph[stop])))
+    return graph
 
 # 2. Implement shortest-time route search
 # Add find_route(graph, start, destination) using Dijkstra’s algorithm / A* algorithm.
@@ -109,7 +113,7 @@ def main():
     route = find_route(graph, start, destination)
     print("Route found:", route)
     '''
-    print(get_list_of_stops(routes))
+    print(construct_graph(routes, get_list_of_stops(routes)))
 
 if __name__ == "__main__":
     main()
