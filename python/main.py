@@ -11,19 +11,18 @@ route_B = ["StopE", "StopF", "StopG", "StopH"]
 route_C = ["StopB", "StopD", "StopF", "StopH"]
 route_D = ["StopA", "StopE", "StopG", "StopH"]
 
+routes = [route_A, route_B, route_C, route_D]
+
 def get_list_of_stops(routes):
     """
     Returns an ordered list of stops from the routes.
     """
     stops = []
     for route in routes:
-        for i in range(len(route)-1):
+        for i in range(len(route)):
             stops.append(route[i])
-    stops.sort()
-    stops = set(stops)
+    stops = sorted(set(stops))
     return stops
-
-print(get_list_of_stops([route_A, route_B, route_C, route_D]))
 
 def construct_graph(routes):
     """
@@ -105,7 +104,6 @@ def main():
     route = find_route(graph, start, destination)
     print("Route found:", route)
     '''
-    routes = [route_A, route_B, route_C, route_D]
     print(get_list_of_stops(routes))
 
 if __name__ == "__main__":
