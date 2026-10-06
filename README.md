@@ -30,6 +30,12 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
+### Installing required packages
+
+```
+pip install -r requirements.txt
+```
+
 ## Running the program
 
 Currently, the backend can be run using `python3 python/main.py`.
