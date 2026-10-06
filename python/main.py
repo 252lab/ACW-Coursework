@@ -24,14 +24,19 @@ def get_list_of_stops(routes):
     stops = sorted(set(stops))
     return stops
 
-def construct_graph(routes):
+def construct_graph(routes, stops):
     """
     Construct a dictionary-based graph from a list of routes.
     Each stop is a key, and its value is a list of stops it connects to.
     (currently a placeholder!)
     """
     graph = {}
-    pass
+    stops = get_list_of_stops(routes)
+    for stop in stops:
+        graph[stop] = []
+    for route in routes:
+        
+    
         
 
 # 2. Implement shortest-time route search
