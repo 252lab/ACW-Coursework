@@ -3,17 +3,13 @@ from importlib.resources import path
 import requests
 import pandas as pd
 
-from asyncio import graph
-
 # 1. Define the graph data model: 
-# Represent stops and one-way bus connections. 
-# Each connection should include its destination stop, route, and estimated travel time. Start with model data.
-example_graph = {
-    "StopA": [("StopB", "Route1", 5), ("StopC", "Route2", 10)],
-    "StopB": [("StopD", "Route3", 15)],
-    "StopC": [("StopD", "Route4", 5)],
-    "StopD": []
-}
+# store each route as a list of stops.
+# build graphs based on these dictionaries, where each stop is a node and each connection is an edge with a weight (travel time).
+route_A = ["StopA", "StopB", "StopC", "StopD"]
+route_B = ["StopE", "StopF", "StopG", "StopH"]
+route_C = ["StopB", "StopD", "StopF", "StopH"]
+route_D = ["StopA", "StopE", "StopG", "StopH"]
 
 # 2. Implement shortest-time route search
 # Add find_route(graph, start, destination) using Dijkstra’s algorithm / A* algorithm.
