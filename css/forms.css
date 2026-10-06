@@ -1,7 +1,7 @@
 /* formatting for the forms */
 
 /* text field inputs */
-input {
+form {
     padding: 20px;
     border-radius:5px;
     font-family: Arial, Helvetica, sans-serif;
