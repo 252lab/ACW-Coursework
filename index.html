@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="css/padding.css">
 <link rel="stylesheet" href="css/rectangle.css">
 <link rel="stylesheet" href="css/map.css">
+<link rel="stylesheet" href="css/forms.css">
 
 
 <!-- header-->
@@ -44,8 +45,36 @@ Map
         <div class="column">
             <div class="rectangle">
 
-                <!-- form here-->
-                <p style="text-align: center;">column 1</p>
+                <!-- Message about using bas stops -->
+                <p style="text-align: center;">Please enter your start and end bus stops, and your start and end times.
+                </p>
+                <br>
+
+                <!-- input form-->
+                <form style="text-align: center;">
+                    <!-- entering locations-->
+                    <label for="startLocation">Start Location:</label>
+                    <input type="text" id="startLocation" name="startLocation">
+                    <br>
+
+                    <label for="endLocation">End Location:</label>
+                    <input type="text" id="endLocation" name="endLocation">
+                    <br>
+
+                    <!-- entering start and end times-->
+
+                    <label for="startTime">Start Time:</label>
+                    <input type="time" id="startTime" name="startTime">
+                    <br>
+
+                    <label for="endTime">End Time:</label>
+                    <input type="time" id="endTime" name="endTime">
+                    <br>
+
+                    <!-- start and end times-->
+                    <input type="submit" value="Submit">
+                </form>
+
             </div>
 
         </div>
