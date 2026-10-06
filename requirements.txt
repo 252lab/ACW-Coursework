@@ -1,4 +1,4 @@
 requests==2.32.3
 pandas==2.2.3
 pytest==8.3.3
-asyncio==3.0.4
+asyncio==4.0.0
