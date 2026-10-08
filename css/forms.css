@@ -19,6 +19,6 @@ input[type=submit] {
     width: 30%;
 }
 
-input[type=submit]:button:hover {
+input[type=submit]:hover {
     background-color: #DE2110;
 }
