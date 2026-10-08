@@ -1,12 +1,10 @@
 /* formatting the background rectangle element */
 .rectangle {
     width: 100%;
-    max-height: 800px;
     background-color: white;
     border-radius: 50px;
     position: relative;
     display: flex;
-    padding-bottom: 100%;
     justify-content: center;
     box-sizing: border-box;
 }
