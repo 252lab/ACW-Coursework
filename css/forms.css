@@ -3,6 +3,7 @@
 form {
     float: none;
     display: block;
+    flex-direction: column;
 }
 
 /* text field inputs */
@@ -27,6 +28,5 @@ input[type=submit] {
 
 /* button hover */
 input[type=submit]:hover {
-    background-color: #0000FF;
-    color: white;
+    background-color: #6e90ff;
 }
