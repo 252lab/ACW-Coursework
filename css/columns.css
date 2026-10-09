@@ -1,7 +1,7 @@
 /*Used for the two column pages*/
 /* pages only splits into columns if the screen is larger than a certain size*/
 
-@media (min-width: 868px) {
+@media (min-width: 950px) {
     .column {
         float: left;
         width: 50%;
