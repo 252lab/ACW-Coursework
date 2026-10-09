@@ -20,6 +20,8 @@ input[type=submit] {
     padding: 8px;
 }
 
+/* button hover */
 input[type=submit]:hover {
     background-color: #0000FF;
+    color: white;
 }
