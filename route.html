@@ -9,6 +9,8 @@
 <link rel="stylesheet" href="css/columns.css">
 <link rel="stylesheet" href="css/padding.css">
 <link rel="stylesheet" href="css/rectangle.css">
+<link rel="stylesheet" href="css/map.css">
+
 
 <!-- header-->
 
@@ -28,15 +30,18 @@
 
     <div class="padding" class="row">
         <div class="column" style="background-color: white;">
-            <p>column 1</p>
+            <p>Your most optimal route is: </p>
+
+            <!-- Insert route information here-->
         </div>
         <div class="column">
-            <!-- map here-->
             <!-- centering the map-->
             <div style="text-align: center;">
-                <!-- importing and formatting the map-->
-                <iframe src=https://traintimes.org.uk/map/tube/ allowfullscreen="" loading="lazy"
-                    referrerpolicy="no-referrer-when-downgrade"></iframe>
+                <div class="map-container">
+                    <!-- importing and formatting the map-->
+                    <iframe src=https://traintimes.org.uk/map/tube/ allowfullscreen="" loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"></iframe>
+                </div>
             </div>
         </div>
     </div>
