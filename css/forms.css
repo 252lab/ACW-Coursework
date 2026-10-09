@@ -1,10 +1,15 @@
 /* formatting for the forms */
 
+form {
+    float: none;
+    display: block;
+}
+
 /* text field inputs */
 input {
     width: 80%;
     padding: 20px;
-    border-radius:5px;
+    border-radius: 5px;
     box-sizing: border-box;
     font-family: Arial, Helvetica, sans-serif;
 }

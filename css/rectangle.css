@@ -4,7 +4,7 @@
     background-color: white;
     border-radius: 50px;
     position: relative;
-    display: flex;
+    display: block;
     justify-content: center;
     box-sizing: border-box;
     padding-left: 5%;
