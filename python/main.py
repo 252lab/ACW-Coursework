@@ -3,6 +3,7 @@ from importlib.resources import path
 import requests
 import pandas as pd
 
+
 # 1. Define the graph data model: 
 # store each route as a list of stops.
 # build graphs based on these dictionaries, where each stop is a node and each connection is an edge with a weight (travel time).
@@ -13,6 +14,44 @@ route_D = ["StopA", "StopE", "StopG", "StopH"]
 
 routes = [route_A, route_B, route_C, route_D]
 
+#creates a list of one-value dictionaries
+#the line is the key, and the value is a list of dictionaries containing the inbound and outbound stop lists
+def get_list_of_lines():
+    #list of valid tube lines
+    LINES = [
+        "bakerloo",
+        "central",
+        "circle",
+        "district",
+        "hammersmith-city",
+        "jubilee",
+        "metropolitan",
+        "northern",
+        "piccadilly",
+        "victoria",
+        "waterloo-city",
+    ]
+    stop_list = []
+    for line in LINES:
+        line_list = {line:[]}
+        for direction in ["inbound","outbound"]:#get the inbound/outbound list as separate
+            url = "https://api.tfl.gov.uk/Line/"+line+"/Route/Sequence/"+direction
+            response = requests.get(url)
+            if response.status_code == 200:
+                data = response.json()
+            else:
+                raise Exception("API not responding")
+            naptanids = data["orderedLineRoutes"][0]["naptanIds"]
+            direction_stop_list = {direction:naptanids}
+            line_list[line].append(direction_stop_list)
+        stop_list.append(line_list)
+    return(stop_list)
+
+print(get_list_of_lines())
+
+
+
+get_list_of_lines()
 def get_list_of_stops(routes):
     """
     Returns an ordered list of stops from the routes.
