@@ -10,7 +10,8 @@
 
     /* if the map is next to another element, fix its position on screen*/
     @media (min-width: 950px) {
-        position: fixed;
+        position: sticky;
+        
     }
 }
 
