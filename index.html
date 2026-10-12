@@ -49,15 +49,19 @@
                 <!-- input form-->
                 <form style="text-align: center;" method="post" action="{{url_for('route_input')}}">
                     <!-- entering locations-->
-                    <label for="startLocation">Start Location:</label>
-                    <input type="text" id="startLocation" name="startLocation">
+                     <!-- the locations are required-->
+                    <label for="startLocation">Start Location*:</label>
+                    <input type="text" id="startLocation" name="startLocation" required>
                     <br>
 
-                    <label for="endLocation">End Location:</label>
-                    <input type="text" id="endLocation" name="endLocation">
+                    <label for="endLocation">End Location*:</label>
+                    <input type="text" id="endLocation" name="endLocation" required>
                     <br>
 
                     <!-- entering start and end times-->
+                    <!-- TODO are we having time as required actions????-->
+                     <!-- if not, take input time as current time
+                      and  take end time as ASAP-->
 
                     <label for="startTime">Start Time:</label>
                     <input type="time" id="startTime" name="startTime">

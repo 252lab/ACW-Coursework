@@ -51,6 +51,9 @@ def route_input():
             endTime = request.form.get("EndTime")
 
             # otherwise output an error
+
+            # need to send inputs to function to handle them
+            # remember to swtich html page
         except:
             print("Form elements cannot be retrived")
 
