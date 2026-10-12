@@ -1,6 +1,10 @@
 import requests
 import pandas as pd
 
+# used just for setting function up
+from flask import Flask, request, render_template
+app = Flask(__name__)
+
 BASE_URL = "https://api.tfl.gov.uk"
 
 def get_json(path):
@@ -29,6 +33,26 @@ def main():
         print(f"Error fetching stop point: {e}")
         return
     print(stop.keys())
+
+# function used to retrive form inputs
+# likely need to restructure app but do that when merge with back end properly
+# WIP - need to handle required inputs/not required inputs
+@app.route("/", methods=["GET", "POST"])
+def route_input():
+
+    # if the form request method is post
+    if request.method("POST"):
+
+        # try to get the form inputs
+        try:
+            startLocation = request.form.get("startLocation")
+            endLocation = request.form.get("endLocation")
+            startTime = request.form.get("startTime")
+            endTime = request.form.get("EndTime")
+
+            # otherwise output an error
+        except:
+            print("Form elements cannot be retrived")
 
 if __name__ == "__main__":
     main()

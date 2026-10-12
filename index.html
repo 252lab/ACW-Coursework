@@ -38,6 +38,8 @@
         <div class="column">
             <div class="rectangle">
 
+                <!-- TODO make some inputs required-->
+
                 <!-- Message about using tube stops -->
                 <p style="text-align: center; padding-top: 10px;">Please enter your start and end tube stops, and your
                     start and end times.
@@ -45,7 +47,7 @@
                 <br>
 
                 <!-- input form-->
-                <form style="text-align: center;" method="post">
+                <form style="text-align: center;" method="post" action="{{url_for('route_input')}}">
                     <!-- entering locations-->
                     <label for="startLocation">Start Location:</label>
                     <input type="text" id="startLocation" name="startLocation">
