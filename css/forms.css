@@ -9,6 +9,12 @@ form {
     padding-right: 5%;
     padding-top: 5%;
     margin: auto;
+    align-items: center;
+}
+
+/* label formatting */
+label {
+    display: block; 
 }
 
 /* text field inputs */
@@ -22,7 +28,6 @@ input {
     padding-left: 5%;
     padding-right: 5%;
     padding-top: 5%;
-    align-items: center;
 }
 
 /* form submit button */
@@ -38,7 +43,6 @@ input[type=submit] {
     padding-left: 5%;
     padding-right: 5%;
     padding-top: 5%;
-    align-items: center;
 }
 
 /* button hover */
