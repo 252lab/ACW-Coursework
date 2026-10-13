@@ -4,11 +4,11 @@ BASE_URL = "https://api.tfl.gov.uk"
 
 def get_routes_between_two_stops_from_api(start, destination):
     '''
-    Fetch all bus routes from the TFL API and filter them to find routes that connect the start and destination stops.
+    Fetch all tube routes from the TFL API and filter them to find routes that connect the start and destination stops.
     Return a dictionary of relevant routes with their stop sequences.
     '''
 
-    all_routes = get_bus_routes() # Fetch all bus routes from the TFL API
+    all_routes = get_tube_routes() # Fetch all tube routes from the TFL API
     relevant_routes = {}
 
     for route in all_routes:
@@ -117,12 +117,12 @@ def get_json(path):
     response.raise_for_status()  # Raise an error for bad responses
     return response.json()
 
-def get_bus_routes():
+def get_tube_routes():
     """
-    Fetch all bus routes from the TFL API.
-    Returns a list of bus route dictionaries.
+    Fetch all tube routes from the TFL API.
+    Returns a list of tube route dictionaries.
     """
-    return get_json("/Line/Mode/bus")
+    return get_json("/Line/Mode/tube")
 
 def get_routes_for_line(line_id: str, direction: str) -> list[list[str]]:
     """
