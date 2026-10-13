@@ -1,33 +1,37 @@
-from importlib.resources import path
-
-import pandas as pd
 import requests
+
+BASE_URL = "https://api.tfl.gov.uk"
 
 def get_routes_between_two_stops_from_api(start, destination):
     '''
     Fetch all bus routes from the TFL API and filter them to find routes that connect the start and destination stops.
-    Returns a dictionary of relevant routes with their stop sequences.
+    Return a dictionary of relevant routes with their stop sequences.
     '''
-    # Fetch all bus routes from the TFL API
-    all_routes = get_bus_routes()
+
+    all_routes = get_bus_routes() # Fetch all bus routes from the TFL API
     relevant_routes = {}
-    # Filter routes that contain either the start or destination stop, or both
+
     for route in all_routes:
         route_id = route.get("id")
-        # fetch the stop points for this route
+        if not route_id:
+            continue
+
         try:
             route_sequence = get_json(f"/Line/{route_id}/Route/Sequence")
         except requests.exceptions.RequestException as e:
             print(f"Error fetching stop points for route {route_id}: {e}")
             continue
-        # Add the route to relevant_routes if it contains both start and destination
-        if start in route_sequence or destination in route_sequence:
+
+        if start in route_sequence and destination in route_sequence:
             relevant_routes[route_id] = route_sequence
+
     return relevant_routes
 
-#creates a list of one-value dictionaries
-#the line is the key, and the value is a list of dictionaries containing the inbound and outbound stop lists
 def get_list_of_lines():
+    '''
+    Creates a list of one-value dictionaries.
+    The line is the key, and the value is a list of dictionaries containing the inbound and outbound stop lists.
+    '''
     #list of valid tube lines
     LINES = [
         "bakerloo",
@@ -58,11 +62,6 @@ def get_list_of_lines():
         stop_list.append(line_list)
     return(stop_list)
 
-print(get_list_of_lines())
-
-
-
-get_list_of_lines()
 def get_list_of_stops(routes):
     """
     Returns an ordered list of stops from the routes.
@@ -70,32 +69,29 @@ def get_list_of_stops(routes):
     stops = []
     routes = get_routes_between_two_stops_from_api(start, destination).values()
     for route in routes:
-        for i in range(len(route)):
-            stops.append(route[i])
-    stops = sorted(set(stops))
-    return stops
+        for stop in route:
+            if stop not in stops:
+                stops.append(stop)
+    return sorted(stops)
 
-def construct_graph(routes, stops):
+def construct_graph(routes, stops=None):
     """
     Construct a dictionary-based graph from a list of routes.
     Each stop is a key, and its value is a list of stops it connects to.
     Not allowing bidirectional travel.
     """
-    graph = {}
-    stops = get_list_of_stops(start, destination)
-    for stop in stops:
-        graph[stop] = []
+    if stops is None:
+        stops = get_list_of_stops(routes)
+
+    graph = {stop: [] for stop in stops}
     for route in routes:
         for i in range(len(route) - 1):
-            graph[route[i]].append(route[i + 1])
-    # remove any duplicates 
+            graph.setdefault(route[i], []).append(route[i + 1])
+
     for stop in graph:
         graph[stop] = list(sorted(set(graph[stop])))
     return graph
 
-# 2. Implement shortest-time route search
-# Add find_route(graph, start, destination) using Dijkstra’s algorithm / A* algorithm.
-# Ensure it returns the fastest path and its total estimated time.
 def find_route(graph, start, destination):
     """
     Find a route from start to destination using the A* algorithm.
@@ -104,9 +100,6 @@ def find_route(graph, start, destination):
     """
     pass
 
-# 3. Reconstruct and report the journey
-# Return all the bus stops along the journey, and the time taken between each.
-# It should be a sequence of steps.
 def reconstruct_journey(route, graph):
     """
     Given a route (list of stops), reconstruct the journey with details of each leg.
@@ -114,11 +107,6 @@ def reconstruct_journey(route, graph):
     (currently a placeholder for the actual implementation)
     """
     pass
-
-# 5. Load graph data from TfL
-# Fetch ordered route stop sequences and convert them into a graph format. 
-
-BASE_URL = "https://api.tfl.gov.uk"
 
 def get_json(path):
     """
@@ -135,6 +123,15 @@ def get_bus_routes():
     Returns a list of bus route dictionaries.
     """
     return get_json("/Line/Mode/bus")
+
+def get_routes_for_line(line_id: str, direction: str) -> list[list[str]]:
+    """
+    Fetch all routes for a specific line from the TFL API.
+    Returns a list of naptanIds for each route in the specified direction (inbound or outbound).
+    """
+    response = get_json(f"/Line/{line_id}/Route/Sequence/{direction}")
+    orderedLineRoutes = response.get("orderedLineRoutes", [])
+    return [route.get("naptanIds", []) for route in orderedLineRoutes]
 
 def get_stop_point(stop_point_id):
     """
@@ -155,12 +152,8 @@ def access_stop_point():
     print(stop.keys())
 
 def main():
-    # Example usage of the find_route function
-    graph = example_graph  # Use the predefined example graph
-    start = "StopA"
-    destination = "StopD"
-    route = find_route(graph, start, destination)
-    print("Route found:", route)
+    result = get_routes_for_line("73", "outbound")
+    print(len(result), result[0][:5])
 
 if __name__ == "__main__":
     main()

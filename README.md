@@ -11,7 +11,6 @@ Website used to plan a bus journey in london.
 ```
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
 ```
 
 ### Windows (PowerShell)
@@ -19,7 +18,6 @@ pip install -r requirements.txt
 ```
 python -m venv .venv
 .venv\Scripts\Activate.ps1
-pip install -r requirements.txt
 ```
 
 ### Windows (cmd)
@@ -27,7 +25,6 @@ pip install -r requirements.txt
 ```
 python -m venv .venv
 .venv\Scripts\activate.bat
-pip install -r requirements.txt
 ```
 
 ### Installing required packages
