@@ -152,7 +152,7 @@ def access_stop_point():
     print(stop.keys())
 
 def main():
-    result = get_routes_for_line("73", "outbound")
+    result = get_routes_for_line("victoria", "outbound")
     print(len(result), result[0][:5])
 
 if __name__ == "__main__":
