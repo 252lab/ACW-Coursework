@@ -2,13 +2,14 @@ import requests
 
 BASE_URL = "https://api.tfl.gov.uk"
 
+
 def get_routes_between_two_stops_from_api(start, destination):
-    '''
+    """
     Fetch all tube routes from the TFL API and filter them to find routes that connect the start and destination stops.
     Return a dictionary of relevant routes with their stop sequences.
-    '''
+    """
 
-    all_routes = get_tube_routes() # Fetch all tube routes from the TFL API
+    all_routes = get_tube_routes()  # Fetch all tube routes from the TFL API
     relevant_routes = {}
 
     for route in all_routes:
@@ -27,12 +28,13 @@ def get_routes_between_two_stops_from_api(start, destination):
 
     return relevant_routes
 
+
 def get_list_of_lines():
-    '''
+    """
     Creates a list of one-value dictionaries.
     The line is the key, and the value is a list of dictionaries containing the inbound and outbound stop lists.
-    '''
-    #list of valid tube lines
+    """
+    # list of valid tube lines
     LINES = [
         "bakerloo",
         "central",
@@ -48,31 +50,32 @@ def get_list_of_lines():
     ]
     stop_list = []
     for line in LINES:
-        line_list = {line:[]}
-        for direction in ["inbound","outbound"]:#get the inbound/outbound list as separate
-            url = "https://api.tfl.gov.uk/Line/"+line+"/Route/Sequence/"+direction
+        line_list = {line: []}
+        for direction in ["inbound", "outbound"]:  # get the inbound/outbound list as separate
+            url = "https://api.tfl.gov.uk/Line/" + line + "/Route/Sequence/" + direction
             response = requests.get(url)
             if response.status_code == 200:
                 data = response.json()
             else:
                 raise Exception("API not responding")
             naptanids = data["orderedLineRoutes"][0]["naptanIds"]
-            direction_stop_list = {direction:naptanids}
+            direction_stop_list = {direction: naptanids}
             line_list[line].append(direction_stop_list)
         stop_list.append(line_list)
-    return(stop_list)
+    return stop_list
+
 
 def get_list_of_stops(routes):
     """
     Returns an ordered list of stops from the routes.
     """
     stops = []
-    routes = get_routes_between_two_stops_from_api(start, destination).values()
     for route in routes:
         for stop in route:
             if stop not in stops:
                 stops.append(stop)
     return sorted(stops)
+
 
 def construct_graph(routes, stops=None):
     """
@@ -92,6 +95,7 @@ def construct_graph(routes, stops=None):
         graph[stop] = list(sorted(set(graph[stop])))
     return graph
 
+
 def find_route(graph, start, destination):
     """
     Find a route from start to destination using the A* algorithm.
@@ -100,6 +104,7 @@ def find_route(graph, start, destination):
     """
     pass
 
+
 def reconstruct_journey(route, graph):
     """
     Given a route (list of stops), reconstruct the journey with details of each leg.
@@ -107,6 +112,7 @@ def reconstruct_journey(route, graph):
     (currently a placeholder for the actual implementation)
     """
     pass
+
 
 def get_json(path):
     """
@@ -117,12 +123,14 @@ def get_json(path):
     response.raise_for_status()  # Raise an error for bad responses
     return response.json()
 
+
 def get_tube_routes():
     """
     Fetch all tube routes from the TFL API.
     Returns a list of tube route dictionaries.
     """
     return get_json("/Line/Mode/tube")
+
 
 def get_routes_for_line(line_id: str, direction: str) -> list[list[str]]:
     """
@@ -133,12 +141,14 @@ def get_routes_for_line(line_id: str, direction: str) -> list[list[str]]:
     orderedLineRoutes = response.get("orderedLineRoutes", [])
     return [route.get("naptanIds", []) for route in orderedLineRoutes]
 
+
 def get_stop_point(stop_point_id):
     """
     Fetch a specific stop point from the TFL API.
     Returns a dictionary containing the stop point details.
     """
     return get_json(f"/StopPoint/{stop_point_id}")
+
 
 def access_stop_point():
     """
@@ -151,9 +161,11 @@ def access_stop_point():
         return
     print(stop.keys())
 
+
 def main():
     result = get_routes_for_line("victoria", "outbound")
     print(len(result), result[0][:5])
+
 
 if __name__ == "__main__":
     main()

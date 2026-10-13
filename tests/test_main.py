@@ -2,4 +2,3 @@
 
 # 4. Test route-search edge cases
 # Test a direct journey, a faster multi-bus journey, an unreachable destination, and start equals destination.
-

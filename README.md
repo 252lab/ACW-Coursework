@@ -33,6 +33,13 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
+## Linting
+
+Run the project lint checks from the activated virtual environment. For example:
+```
+black .
+```
+
 ## Running the program
 
 Currently, the backend can be run using `python3 python/main.py`.
