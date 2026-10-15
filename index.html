@@ -42,7 +42,11 @@
 
                 <!-- Message about using tube stops -->
                 <p style="text-align: center; padding-top: 10px;">Please enter your start and end tube stops, and your
-                    start and end times.
+                    start or end time.
+                </p>
+                <br>
+                <p>
+                    Your start and end stops are required. Please only enter the start time or an end time, if a time is entered.
                 </p>
                 <br>
 
@@ -59,9 +63,7 @@
                     <br>
 
                     <!-- entering start and end times-->
-                    <!-- TODO are we having time as required actions????-->
-                     <!-- if not, take input time as current time
-                      and  take end time as ASAP-->
+                     <!-- the user can only enter one or the other-->
 
                     <label for="startTime">Start Time:</label>
                     <input type="time" id="startTime" name="startTime">
