@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="css/rectangle.css">
 <link rel="stylesheet" href="css/forms.css">
 <link rel="stylesheet" href="css/map.css">
+<link rel="stylesheet" href="css/tabs.css">
 
 
 <!-- header-->
@@ -27,6 +28,8 @@
 </head>
 
 <!-- main body of the webpage-->
+<!-- linking to js file-->
+ <script src="javascript/tabs.js"></script>
 
 <body style="font-family: Arial, Helvetica, sans-serif; background-color: #5C6BC0;">
 
@@ -71,8 +74,8 @@
 
                     <!-- Tab links -->
                     <div class="tab">
-                        <button class="tablinks" onclick="openCity(event, 'start')">Start Time</button>
-                        <button class="tablinks" onclick="openCity(event, 'end')">End Time</button>
+                        <button class="tablinks" onclick="openTime(event, 'start')">Start Time</button>
+                        <button class="tablinks" onclick="opentime(event, 'end')">End Time</button>
 
                     </div>
 
@@ -82,9 +85,6 @@
                         <label for="startTime">Start Time:</label>
                         <input type="time" id="startTime" name="startTime">
                         <br>
-
-                        <!-- submit button -->
-                        <input type="submit" value="Submit">
 
                     </div>
 
@@ -96,13 +96,13 @@
                         <input type="time" id="endTime" name="endTime">
                         <br>
 
-                        <!-- submit button -->
-                        <input type="submit" value="Submit">
-
                     </div>
 
-                </form>
+                    <!-- submit button -->
                     <input type="submit" value="Submit">
+
+                </form>
+
             </div>
 
         </div>
