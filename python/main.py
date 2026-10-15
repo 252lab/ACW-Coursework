@@ -3,11 +3,59 @@ import requests
 BASE_URL = "https://api.tfl.gov.uk"
 
 
+def get_json(path):
+    """
+    Fetch BASE_URL + path and return the JSON response.
+    Raise requests.exceptions.RequestException for any request errors.
+    """
+    response = requests.get(f"{BASE_URL}{path}", timeout=10)
+    response.raise_for_status()  # Raise an error for bad responses
+    return response.json()
+
+
+def get_tube_routes():
+    """
+    Fetch all tube routes from the TFL API.
+    Returns a list of tube route dictionaries.
+    """
+    return get_json("/Line/Mode/tube")
+
+
+def get_stop_point(stop_point_id):
+    """
+    Fetch a specific stop point from the TFL API.
+    Returns a dictionary containing the stop point details.
+    """
+    return get_json(f"/StopPoint/{stop_point_id}")
+
+
+def access_stop_point():
+    """
+    Access a specific stop point and print its keys.
+    """
+    try:
+        stop = get_stop_point("490008660N")  # Example stop point ID
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching stop point: {e}")
+        return
+    print(stop.keys())
+
+
+def get_routes_for_line(line_id: str, direction: str) -> list[list[str]]:
+    """
+    Fetch all routes for a specific line from the TFL API.
+    Returns a list of naptanIds for each route in the specified direction (inbound or outbound).
+    """
+    response = get_json(f"/Line/{line_id}/Route/Sequence/{direction}")
+    orderedLineRoutes = response.get("orderedLineRoutes", [])
+    return [route.get("naptanIds", []) for route in orderedLineRoutes]
+
+
 def get_routes_between_two_stops_from_api(start, destination):
     """
     Fetch all tube routes from the TFL API and filter them to find routes that connect the start and destination stops.
     Return a dictionary of relevant routes with their stop sequences.
-    NOTE: This only works for max. one switch between lines. If the route requires more than one switch, it will not be found. 
+    NOTE: This only works for max. one switch between lines. If the route requires more than one switch, it will not be found.
     TODO: Rewrite this function to include a more robust pathfinding algorithm that can handle multiple line switches and find the optimal route.
     TODO: Or scrap this function entirely?
     """
@@ -115,54 +163,6 @@ def reconstruct_journey(route, graph):
     (currently a placeholder for the actual implementation)
     """
     pass
-
-
-def get_json(path):
-    """
-    Fetch BASE_URL + path and return the JSON response.
-    Raise requests.exceptions.RequestException for any request errors.
-    """
-    response = requests.get(f"{BASE_URL}{path}", timeout=10)
-    response.raise_for_status()  # Raise an error for bad responses
-    return response.json()
-
-
-def get_tube_routes():
-    """
-    Fetch all tube routes from the TFL API.
-    Returns a list of tube route dictionaries.
-    """
-    return get_json("/Line/Mode/tube")
-
-
-def get_routes_for_line(line_id: str, direction: str) -> list[list[str]]:
-    """
-    Fetch all routes for a specific line from the TFL API.
-    Returns a list of naptanIds for each route in the specified direction (inbound or outbound).
-    """
-    response = get_json(f"/Line/{line_id}/Route/Sequence/{direction}")
-    orderedLineRoutes = response.get("orderedLineRoutes", [])
-    return [route.get("naptanIds", []) for route in orderedLineRoutes]
-
-
-def get_stop_point(stop_point_id):
-    """
-    Fetch a specific stop point from the TFL API.
-    Returns a dictionary containing the stop point details.
-    """
-    return get_json(f"/StopPoint/{stop_point_id}")
-
-
-def access_stop_point():
-    """
-    Access a specific stop point and print its keys.
-    """
-    try:
-        stop = get_stop_point("490008660N")  # Example stop point ID
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching stop point: {e}")
-        return
-    print(stop.keys())
 
 
 def main():
