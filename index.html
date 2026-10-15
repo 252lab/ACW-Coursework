@@ -46,14 +46,16 @@
                 </p>
                 <br>
                 <p>
-                    Your start and end stops are required. Please only enter the start time or the end time, if a time is entered.
+                    Your start and end stops are required. Please only enter the start time or the end time, if a time
+                    is entered.
                 </p>
                 <br>
 
                 <!-- input form-->
                 <form style="text-align: center;" method="post" action="{{url_for('route_input')}}">
+                    
                     <!-- entering locations-->
-                     <!-- the locations are required-->
+                    <!-- the locations are required-->
                     <label for="startLocation">Start Location*:</label>
                     <input type="text" id="startLocation" name="startLocation" required>
                     <br>
@@ -63,33 +65,56 @@
                     <br>
 
                     <!-- entering start and end times-->
-                     <!-- the user can only enter one or the other-->
+                    <!-- the user can only enter one or the other-->
+                    <!-- Tabs based on 
+                        https://www.w3schools.com/howto/howto_js_tabs.asp -->
 
-                    <label for="startTime">Start Time:</label>
-                    <input type="time" id="startTime" name="startTime">
-                    <br>
+                    <!-- Tab links -->
+                    <div class="tab">
+                        <button class="tablinks" onclick="openCity(event, 'start')">Start Time</button>
+                        <button class="tablinks" onclick="openCity(event, 'end')">End Time</button>
 
-                    <label for="endTime">End Time:</label>
-                    <input type="time" id="endTime" name="endTime">
-                    <br>
+                    </div>
 
-                    <!-- start and end times-->
-                    <input type="submit" value="Submit">
+                    <!-- Tab content -->
+                    <!-- the tab for submitting the start time of the suer's journey -->
+                    <div id="start" class="tabcontent">
+                        <label for="startTime">Start Time:</label>
+                        <input type="time" id="startTime" name="startTime">
+                        <br>
+
+                        <!-- submit button -->
+                        <input type="submit" value="Submit">
                 </form>
-
             </div>
+
+            <!-- the tab for submitting the end time of the user's journey-->
+            <div id="end" class="tabcontent">
+
+                <label for="endTime">End Time:</label>
+                <input type="time" id="endTime" name="endTime">
+                <br>
+
+                <!-- submit button -->
+                <input type="submit" value="Submit">
+                </form>
+            </div>
+
+
 
         </div>
 
-        <!-- the column where the map is-->
-        <div class="column">
-            <!-- centering the map-->
-            <div class="map-container">
-                <!-- importing and formatting the map-->
-                <iframe src=https://traintimes.org.uk/map/tube/ allowfullscreen="" loading="lazy"
-                    referrerpolicy="no-referrer-when-downgrade"></iframe>
-            </div>
+    </div>
+
+    <!-- the column where the map is-->
+    <div class="column">
+        <!-- centering the map-->
+        <div class="map-container">
+            <!-- importing and formatting the map-->
+            <iframe src=https://traintimes.org.uk/map/tube/ allowfullscreen="" loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"></iframe>
         </div>
+    </div>
     </div>
 </body>
 
