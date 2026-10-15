@@ -45,7 +45,7 @@
                     start or end time.
                 </p>
                 <br>
-                <p>
+                <p style="text-align: center; padding-top: 10px;">
                     Your start and end stops are required. Please only enter the start time or the end time, if a time
                     is entered.
                 </p>
@@ -53,7 +53,7 @@
 
                 <!-- input form-->
                 <form style="text-align: center;" method="post" action="{{url_for('route_input')}}">
-                    
+
                     <!-- entering locations-->
                     <!-- the locations are required-->
                     <label for="startLocation">Start Location*:</label>
@@ -85,36 +85,37 @@
 
                         <!-- submit button -->
                         <input type="submit" value="Submit">
+
+                    </div>
+
+
+                    <!-- the tab for submitting the end time of the user's journey-->
+                    <div id="end" class="tabcontent">
+
+                        <label for="endTime">End Time:</label>
+                        <input type="time" id="endTime" name="endTime">
+                        <br>
+
+                        <!-- submit button -->
+                        <input type="submit" value="Submit">
+
+                    </div>
+
                 </form>
+
             </div>
-
-            <!-- the tab for submitting the end time of the user's journey-->
-            <div id="end" class="tabcontent">
-
-                <label for="endTime">End Time:</label>
-                <input type="time" id="endTime" name="endTime">
-                <br>
-
-                <!-- submit button -->
-                <input type="submit" value="Submit">
-                </form>
-            </div>
-
-
 
         </div>
 
-    </div>
-
-    <!-- the column where the map is-->
-    <div class="column">
-        <!-- centering the map-->
-        <div class="map-container">
-            <!-- importing and formatting the map-->
-            <iframe src=https://traintimes.org.uk/map/tube/ allowfullscreen="" loading="lazy"
-                referrerpolicy="no-referrer-when-downgrade"></iframe>
+        <!-- the column where the map is-->
+        <div class="column">
+            <!-- centering the map-->
+            <div class="map-container">
+                <!-- importing and formatting the map-->
+                <iframe src=https://traintimes.org.uk/map/tube/ allowfullscreen="" loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
         </div>
-    </div>
     </div>
 </body>
 
