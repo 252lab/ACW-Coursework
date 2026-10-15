@@ -7,6 +7,9 @@ def get_routes_between_two_stops_from_api(start, destination):
     """
     Fetch all tube routes from the TFL API and filter them to find routes that connect the start and destination stops.
     Return a dictionary of relevant routes with their stop sequences.
+    NOTE: This only works for max. one switch between lines. If the route requires more than one switch, it will not be found. 
+    TODO: Rewrite this function to include a more robust pathfinding algorithm that can handle multiple line switches and find the optimal route.
+    TODO: Or scrap this function entirely?
     """
 
     all_routes = get_tube_routes()  # Fetch all tube routes from the TFL API
