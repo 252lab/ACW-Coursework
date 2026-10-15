@@ -5,6 +5,9 @@ function openTime(evt, time) {
     // Declare all variables
     var i, tabcontent, tablinks;
 
+     // Handle the form data -> prevents the buttons from acting as form submits
+    evt.preventDefault();
+
     // Get all elements with class="tabcontent" and hide them
     tabcontent = document.getElementsByClassName("tabcontent");
     for (i = 0; i < tabcontent.length; i++) {
