@@ -1,7 +1,6 @@
 /* formatting the background rectangle element */
 .rectangle {
     width: 90%;
-    height:50%;
     background-color: white;
     border-radius: 50px;
     position: relative;
