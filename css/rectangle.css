@@ -4,10 +4,11 @@
     background-color: white;
     border-radius: 50px;
     position: relative;
-    display: block;
+    display: flex;
     justify-content: center;
     box-sizing: border-box;
     padding-left: 5%;
     padding-right: 5%;
     flex-direction: column;
+    align-self: center;
 }
