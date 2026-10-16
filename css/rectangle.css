@@ -4,11 +4,16 @@
     background-color: white;
     border-radius: 50px;
     position: relative;
-    display: flex;
+    display: block;
     justify-content: center;
     box-sizing: border-box;
     padding-left: 5%;
     padding-right: 5%;
     flex-direction: column;
-    align-self: center;
+
+    /* centering the rectangle on mobile views */
+    @media (max-width: 950px) {
+        margin: 0 auto;
+    }
+
 }
