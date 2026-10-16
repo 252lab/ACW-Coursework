@@ -148,6 +148,26 @@ def find_route(graph, start, destination):
     This function should return a list of nodes representing the path from start to destination.
     (currently a placeholder for the actual implementation)
     """
+    route_found = False
+    unvisited_nodes = []
+    node_distances = {}
+    node_distances["start"] = 0
+    for nodes in graph:
+        unvisited_nodes.append(nodes)
+    unvisted_nodes.remove(start)
+    while route_found == False:
+        graph_node = None
+        for x in unvisited_nodes:
+            if find_time(x,node_distances,graph) < smallest:
+                smallest = find_time(x,node_distances,graph)
+        if graph_node == destination:
+            route_found == True
+            return(node_distances)
+        else:
+            node_distances[graph_node] = "distance + route"
+
+
+
     pass
 
 
