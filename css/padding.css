@@ -1,10 +1,8 @@
 /* adding the padding to the webpage */
 
 .bodyPadding {
-    @media (min-width: 950px) {
-        padding-left: 12.5%;
-        padding-right: 12.5%;
-    }
 
+    padding-left: 12.5%;
+    padding-right: 12.5%;
     padding-top: 5%;
 }
