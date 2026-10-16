@@ -103,14 +103,9 @@ def get_list_of_lines():
     for line in LINES:
         line_list = {line: []}
         for direction in ["inbound", "outbound"]:  # get the inbound/outbound list as separate
-            url = "https://api.tfl.gov.uk/Line/" + line + "/Route/Sequence/" + direction
-            response = requests.get(url)
-            if response.status_code == 200:
-                data = response.json()
-            else:
-                raise Exception("API not responding")
-            naptanids = data["orderedLineRoutes"][0]["naptanIds"]
-            direction_stop_list = {direction: naptanids}
+            routes = get_routes_for_line(line, direction)
+            naptan_ids = routes[0]
+            direction_stop_list = {direction: naptan_ids}
             line_list[line].append(direction_stop_list)
         stop_list.append(line_list)
     return stop_list
