@@ -52,21 +52,22 @@ def validate_inputs(startLocation, endLocation, startTime, endTime):
     #validating station names
     try:
         # check if start station and end station can be found in the API/data
+        #TODO -> implement searching algorithm (either sort the data and use binary search, or use Boyer Moore Algorithm for Pattern Searching)
         pass
     except:
-        #update with proper error message later
+        #TODO -> update with proper error message later
         print("Your entered stations could not be found.")
     
     # validating time inputs
     try:
+        # if both times are entered, output an error message
         if (startTime != "" and endTime != ""):
             #TODO - change to proper error message
             print("Please only enter one time.")
-            
+
+        # if no time is entered, get the current time as the start time
         elif (startTime == "" and endTime == ""):
-            # take start time as current time
             startTime = datetime.now()
-            # and end time as ASAP -> Don't assign?
     except:
         #TODO - Change error message later
         print("Couldn't validate time inputs.")
