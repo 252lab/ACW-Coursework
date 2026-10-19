@@ -18,3 +18,8 @@ line_length = 100
 max-line-length = 100
 ignore = ["E501", "W503"]
 exclude = [".venv", "__pycache__"]
+
+[tool.pytest.ini_options]
+markers = [
+	"integration: tests that call the live TfL API and require network access",
+]

@@ -6,7 +6,10 @@ from python.main import get_json, get_tube_routes, get_routes_for_line, get_list
 
 # TESTS FOR HELPER FUNCTIONS 
 
-# get_json tests 
+# These tests call the live TfL API and require network access.
+pytestmark = pytest.mark.integration
+
+# get_json tests
 
 def test_get_json_valid_url():
     """
@@ -15,7 +18,11 @@ def test_get_json_valid_url():
     lines = get_json("/Line/Mode/tube")
     assert isinstance(lines, list)
     assert lines
-    assert {"id", "name", "modeName"} <= lines[0].keys()
+    assert all(
+        isinstance(line, dict)
+        and {"id", "name", "modeName"} <= line.keys()
+        for line in lines
+    )
 
 def test_get_json_invalid_url():
     """
@@ -33,7 +40,10 @@ def test_get_tube_routes():
     routes = get_tube_routes()
     assert isinstance(routes, list)
     assert routes
-    assert {"$type", "id", "name"} <= routes[0].keys()
+    assert all(
+        isinstance(route, dict) and {"id", "name"} <= route.keys()
+        for route in routes
+    )
 
 
 # To be filled in with actual test cases for the main.py functions. The following are placeholders for future tests.
