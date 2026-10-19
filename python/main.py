@@ -29,12 +29,12 @@ def get_stop_point(stop_point_id):
     return get_json(f"/StopPoint/{stop_point_id}")
 
 
-def access_stop_point():
+def access_stop_point(stop_point_id):
     """
     Access a specific stop point and print its keys.
     """
     try:
-        stop = get_stop_point("490008660N")  # Example stop point ID
+        stop = get_stop_point(stop_point_id)
     except requests.exceptions.RequestException as e:
         print(f"Error fetching stop point: {e}")
         return
