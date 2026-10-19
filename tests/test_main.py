@@ -45,6 +45,15 @@ def test_get_tube_routes():
         for route in routes
     )
 
+# get_stop_points routes
+
+def test_get_stop_points():
+    """
+    Test the get_stop_points function with a valid stop point ID.
+    """
+    response = get_json(f"/StopPoint/490008660N")
+    assert {"id", "commonName"} <= response.keys() in response
+
 
 # To be filled in with actual test cases for the main.py functions. The following are placeholders for future tests.
 def test_one_valid_direct_route():
