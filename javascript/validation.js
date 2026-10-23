@@ -12,10 +12,7 @@ form.addEventListener("submit", function (event) {
     //both times cannot be entered
     if (startTime && endTime) {
         event.preventDefault();
-
-        errorText.textContent =
-            "Please enter either a start time or an end time, not both.";
-
+        errorText.textContent ="Please enter either a start time or an end time, not both.";
         errorBox.style.display = "block";
     }
 });
