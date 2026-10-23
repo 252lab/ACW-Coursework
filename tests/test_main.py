@@ -148,11 +148,16 @@ def test_get_list_of_lines():
 
 @pytest.mark.integration
 def test_get_list_of_stops():
-    routes = ["bakerloo", "central", "circle"]
+    routes = [
+        ["bakerloo", "paddington", "oxford"],
+        ["paddington", "notting-hill", "central"],
+        ["central", "bakerloo", "queen's-park"],
+    ]
     stops = get_list_of_stops(routes)
+    expected = sorted({stop for route in routes for stop in route})
     assert isinstance(stops, list)
     assert stops
-    assert stops == sorted(stops)
+    assert stops == expected
 
 
 # To be filled in with actual test cases for the main.py functions. The following are placeholders for future tests.
