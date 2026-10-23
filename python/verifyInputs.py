@@ -29,8 +29,8 @@ def route_input():
         # removing any extra spaces and changing them to lowecase, to make it 
         # easier to verify
         try:
-            startLocation = request.form.get("startLocation").strip().toLower()
-            endLocation = request.form.get("endLocation").strip().toLower()
+            startLocation = request.form.get("startLocation").strip()
+            endLocation = request.form.get("endLocation").strip()
 
             # default is an empty string if no input for the time
             startTime = request.form.get("startTime", "").strip()
@@ -99,4 +99,15 @@ def validate_inputs(startLocation, endLocation, startTime, endTime):
 #checking if the station is valid
 # return station ID if found
 def find_station(stationName):
+
+    # converting the station name to lower case and removing any extra paces
+    toMatch = stationName.toLower().replace(" ", "")
+
+    # retriving list of station names and IDs to check
+
+    # find a specific stop based on its name
+    # and return its ID
+
+    # compare station common name to entered name
+    # if entered name in station name (and there is only one), return station id
     pass
