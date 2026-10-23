@@ -50,24 +50,25 @@ def test_get_tube_routes():
 def test_get_stop_points():
     """
     Test the get_stop_points function with a valid stop point ID.
-    TODO: Needs fixing.
     """
-    response = get_stop_point(f"/StopPoint/490008660N")
-    assert {"id", "commonName"} <= response.keys() in response
+    response = get_stop_point("490008660N")
+    assert {"id", "commonName"} <= set(response.keys())
+
 
 def test_get_stop_points_invalid():
     """
     Test the get_stop_points function with an invalid stop point ID.
     """
     with pytest.raises(requests.exceptions.RequestException):
-        get_stop_point(f"/StopPoint/invalid_id")
+        get_stop_point("/StopPoint/invalid_id")
+
 
 def test_access_stop_point():
     """
     Test the access_stop_point function with a valid stop ID.
     """
-    keys = access_stop_point(f"/StopPoint/490008660N")
-    assert {"id", "commonName"} in keys
+    keys = access_stop_point("490008660N")
+    assert {"id", "commonName"} <= keys
 
 
 # To be filled in with actual test cases for the main.py functions. The following are placeholders for future tests.

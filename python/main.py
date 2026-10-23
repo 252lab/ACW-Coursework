@@ -31,7 +31,7 @@ def get_stop_point(stop_point_id):
 
 def access_stop_point(stop_point_id):
     """
-    Access a specific stop point and print its keys.
+    Access a specific stop point and return its keys.
     """
     try:
         stop = get_stop_point(stop_point_id)
