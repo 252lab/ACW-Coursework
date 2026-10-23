@@ -33,12 +33,12 @@ def access_stop_point(stop_point_id):
     """
     Access a specific stop point and return its keys.
     """
+    stop = None
     try:
         stop = get_stop_point(stop_point_id)
     except requests.exceptions.RequestException as e:
         print(f"Error fetching stop point: {e}")
-        return
-    print(stop.keys())
+    return stop.keys() if stop else None
 
 
 def get_routes_for_line(line_id: str, direction: str) -> list[list[str]]:
