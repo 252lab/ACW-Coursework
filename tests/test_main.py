@@ -104,7 +104,7 @@ def test_access_stop_point_invalid_id():
     Test the access_stop_point function with an invalid stop ID.
     """
     result = access_stop_point("invalid_id")
-    assert result == "AttributeError: 'NoneType' object has no attribute 'keys'"
+    assert result is None
 
 
 # get_routes_for_line tests
@@ -152,7 +152,7 @@ def test_get_list_of_stops():
     stops = get_list_of_stops(routes)
     assert isinstance(stops, list)
     assert stops
-    assert stops.sort() == stops
+    assert stops == sorted(stops)
 
 
 # To be filled in with actual test cases for the main.py functions. The following are placeholders for future tests.
