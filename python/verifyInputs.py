@@ -51,6 +51,10 @@ def validate_inputs(startLocation, endLocation, startTime, endTime):
 
     # variable to check if the inputs are valid
     validInputs = True
+
+    # assigning variables
+    startID = ""
+    endID = ""
     
     #validating station names
     try:
@@ -62,6 +66,9 @@ def validate_inputs(startLocation, endLocation, startTime, endTime):
             print("Please enter two different stations.")
             validInputs = False
         else:
+
+            startID = find_station(startLocation)
+            endID = find_station(endLocation)
 
     except:
         #TODO -> update with proper error message later
@@ -87,7 +94,7 @@ def validate_inputs(startLocation, endLocation, startTime, endTime):
     # if all the inputs thaty have been entered are valid
     if validInputs:
         # returning the validated inputs
-        return startLocation, endLocation, startTime, endTime
+        return startID, endID, startTime, endTime
 
 #checking if the station is valid
 # return station ID if found
