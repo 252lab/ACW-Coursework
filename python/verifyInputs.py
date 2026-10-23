@@ -1,8 +1,8 @@
 import datetime
-import flask
-
-# used just for setting function up
+import requests
 from flask import Flask, request, render_template
+
+# setting up flask app
 app = Flask(__name__)
 
 BASE_URL = "https://api.tfl.gov.uk"
@@ -102,12 +102,31 @@ def find_station(stationName):
 
     # converting the station name to lower case and removing any extra paces
     toMatch = stationName.toLower().replace(" ", "")
+    foundMatches = []
 
     # retriving list of station names and IDs to check
+
+    try:
+        pass
+    except:
+        pass
+
+    # searching array of Ids
+    try:
+        pass
+    except:
+        pass
+
+
+    if (foundMatches.len() == 1):
+        return foundMatches[0]
+    
+    elif (foundMatches.len() > 1):
+        pass
+        # need to handle two stations having similar names
 
     # find a specific stop based on its name
     # and return its ID
 
     # compare station common name to entered name
     # if entered name in station name (and there is only one), return station id
-    pass
