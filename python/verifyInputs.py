@@ -2,7 +2,7 @@ import datetime
 import requests
 from flask import Flask, request, render_template
 
-# setting up flask app
+# setting up flask
 app = Flask(__name__)
 
 BASE_URL = "https://api.tfl.gov.uk"
@@ -130,3 +130,8 @@ def find_station(stationName):
 
     # compare station common name to entered name
     # if entered name in station name (and there is only one), return station id
+
+def list_stations():
+    #retriving array of stop points and ids
+    pass
+
