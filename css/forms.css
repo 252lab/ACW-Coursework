@@ -41,3 +41,21 @@ input[type=submit] {
 input[type=submit]:hover {
     background-color: #6e90ff;
 }
+/* error message format*/
+.error-message {
+    display: none;
+    background-color: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #f87171;
+    border-radius: 5px;
+    padding: 12px;
+    margin-bottom: 15px;
+    width: 80%;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: left;
+}
+
+.error-message p {
+    margin: 5px 0 0;
+}

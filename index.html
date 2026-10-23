@@ -56,7 +56,11 @@
 
                 <!-- input form-->
                 <form style="text-align: center;" method="post" action="{{url_for('route_input')}}">
-
+                    <!-- Error message -->
+                    <div id="error-message" class="error-message" role="alert">
+                        <strong>Error!</strong>
+                        <p id="error-text"></p>
+                    </div>
                     <!-- entering locations-->
                     <!-- the locations are required-->
                     <label for="startLocation">Start Location*:</label>
