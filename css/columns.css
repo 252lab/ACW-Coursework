@@ -1,5 +1,6 @@
 /*Used for the two column pages*/
 /* pages only splits into columns if the screen is larger than a certain size*/
+/* https://www.w3schools.com/howto/howto_css_two_columns.asp tutorial used & modifed */
 
 @media (min-width: 950px) {
     .column {
