@@ -6,6 +6,7 @@ from python.main import (
     get_json,
     get_list_of_lines,
     get_list_of_stops,
+    get_routes_for_line,
     get_stop_point,
     get_tube_routes,
 )
@@ -41,13 +42,12 @@ def test_get_json_invalid_url():
     with pytest.raises(requests.exceptions.RequestException):
         get_json("/invalid/url")
 
-@pytest.mark.integration
+@pytest.mark.skip(reason="A deterministic timeout test needs a mocked request.")
 def test_get_json_timeout():
     """
     Test the get_json function with a timeout.
     """
-    pass
-    # need to simulate a timeout
+    # Skipped until we can test this without mocking or relying on a flaky live timeout.
 
 # ----------------------------------------------------------------
 
@@ -55,7 +55,7 @@ def test_get_json_timeout():
 
 
 @pytest.mark.integration
-def test_get_tube_routes():
+def test_get_tube_routes_valid():
     """
     Test the get_tube_routes function to ensure it returns a list of tube routes.
     """
@@ -69,21 +69,22 @@ def test_get_tube_routes():
 
 
 @pytest.mark.integration
-def test_get_stop_points():
+def test_get_stop_point_valid():
     """
-    Test the get_stop_points function with a valid stop point ID.
+    Test the get_stop_point function with a valid stop point ID.
     """
     response = get_stop_point("490008660N")
+    assert isinstance(response, dict)
     assert {"id", "commonName"} <= set(response.keys())
 
 
 @pytest.mark.integration
-def test_get_stop_points_invalid():
+def test_get_stop_point_invalid_id():
     """
     Test the get_stop_points function with an invalid stop point ID.
     """
     with pytest.raises(requests.exceptions.RequestException):
-        get_stop_point("/StopPoint/invalid_id")
+        get_stop_point("invalid_id")
 
 
 # get_access_stop_point tests
@@ -115,7 +116,10 @@ def test_get_routes_for_line_valid():
     """
     Test the get_routes_for_line function to check that it returns a list of naptanIds for a valid line from the TFL API
     """
-    pass
+    routes = get_routes_for_line("bakerloo", "inbound")
+    assert isinstance(routes, list)
+    assert routes
+    assert all(isinstance(route, list) and all(isinstance(stop, str) for stop in route) for route in routes)
 
 
 @pytest.mark.integration
@@ -123,30 +127,37 @@ def test_get_routes_for_line_invalid():
     """
     Test the get_routes_for_line function to check that an error is raised for an invalid line.
     """
-    # result = get_routes_for_line()
-    pass
-    # need to check what error is returned
+    with pytest.raises(requests.exceptions.RequestException):
+        get_routes_for_line("not-a-real-line", "inbound")
 
 
 # get_list_of_lines tests
 
 @pytest.mark.integration
-def test_get_list_of_lines():
+def test_get_list_of_lines_valid():
     """
     Test the get_list_of_lines function to ensure it returns a list of one-value dictionaries.
     """
     lines = get_list_of_lines()
     assert isinstance(lines, list)
     assert lines
-    assert all(
-        isinstance(line, dict) and len(line) == 1 and isinstance(list(line.values())[0], list)
-        for line in lines
-    )
+    assert len(lines) == 11
+
+    for line in lines:
+        assert isinstance(line, dict)
+        assert len(line) == 1
+        directions = next(iter(line.values()))
+        assert isinstance(directions, list)
+        assert [list(direction) for direction in directions] == [["inbound"], ["outbound"]]
+        assert all(
+            isinstance(stops, list) and stops and all(isinstance(stop, str) for stop in stops)
+            for direction in directions
+            for stops in direction.values()
+        )
 
 
 # get_list_of_stops tests
 
-@pytest.mark.integration
 def test_get_list_of_stops():
     routes = [
         ["bakerloo", "paddington", "oxford"],
@@ -158,6 +169,12 @@ def test_get_list_of_stops():
     assert isinstance(stops, list)
     assert stops
     assert stops == expected
+
+def test_get_list_of_stops_empty():
+    routes = []
+    stops = get_list_of_stops(routes)
+    assert isinstance(stops, list)
+    assert stops == []
 
 
 # To be filled in with actual test cases for the main.py functions. The following are placeholders for future tests.
