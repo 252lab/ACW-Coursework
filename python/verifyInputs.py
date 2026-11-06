@@ -13,7 +13,7 @@ This subroutine is used to retrieve the form inputs from the index.html page, an
 If they inputs are not valid, an error message will be displayed and the user will be promted to re-enter their
 inputs. If the inputs are valid, they will then be sent to the algorithm.
 """
-@app.route("/", methods=["GET", "POST"])
+@app.route("/route_input", methods=["GET", "POST"])
 def route_input():
 
     # initialising input variables

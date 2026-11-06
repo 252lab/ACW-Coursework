@@ -15,4 +15,11 @@ form.addEventListener("submit", function (event) {
         errorText.textContent ="Please enter either a start time or an end time, not both.";
         errorBox.style.display = "block";
     }
+
+    switchPage();
 });
+
+// function to switch from the index page to the route page
+function switchPage(){
+    window.location.pathname = "route.html";
+}
