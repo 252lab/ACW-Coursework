@@ -9,14 +9,18 @@ form.addEventListener("submit", function (event) {
     //hide any previous error
     errorBox.style.display = "none";
 
+    // validating inputs
+    var noErrors = true;
+
     //both times cannot be entered
-    if (startTime && endTime) {
+    if (startTime !=="" && endTime !== "") {
         event.preventDefault();
         errorText.textContent ="Please enter either a start time or an end time, not both.";
         errorBox.style.display = "block";
+        noErrors = false;
     }
 
-    switchPage();
+    if (noErrors) switchPage();
 });
 
 // function to switch from the index page to the route page
