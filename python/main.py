@@ -20,6 +20,12 @@ def get_tube_routes():
     """
     return get_json("/Line/Mode/tube")
 
+def get_alphabetical_stops():
+    """
+    Fetch an alphabetical list of tube routes from the TFL API.
+    """
+    return get_json("https://api.tfl.gov.uk/StopPoint/Mode/Tube")
+
 
 def get_stop_point(stop_point_id):
     """
