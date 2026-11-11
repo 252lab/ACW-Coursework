@@ -2,6 +2,22 @@ import requests
 
 BASE_URL = "https://api.tfl.gov.uk"
 
+class platform:
+    line = ""
+    direction = ""
+    stations_left_on_route = {} # in the format {station:[time1,time2,time3 etc]}
+    train_leave_times = []
+
+
+class station:
+    platforms = []#list of station objects
+
+class route:
+    current_platforms = [] #list of platform objects
+    available_platforms = {} #combination of all of the station_left_on_route dictionaries from current_platform objects
+                             #plus other platforms in the available stations
+    current_time = 0
+
 
 def get_json(path):
     """
@@ -20,12 +36,6 @@ def get_tube_routes():
     """
     return get_json("/Line/Mode/tube")
 
-def get_alphabetical_stops():
-    """
-    Fetch an alphabetical list of tube routes from the TFL API.
-    """
-    return get_json("https://api.tfl.gov.uk/StopPoint/Mode/Tube")
-
 
 def get_stop_point(stop_point_id):
     """
@@ -39,12 +49,12 @@ def access_stop_point(stop_point_id):
     """
     Access a specific stop point and return its keys.
     """
-    stop = None
     try:
         stop = get_stop_point(stop_point_id)
     except requests.exceptions.RequestException as e:
         print(f"Error fetching stop point: {e}")
-    return stop.keys() if stop else None
+        return
+    print(stop.keys())
 
 
 def get_routes_for_line(line_id: str, direction: str) -> list[list[str]]:
@@ -64,6 +74,7 @@ def get_routes_between_two_stops_from_api(start, destination):
     NOTE: This only works for max. one switch between lines. If the route requires more than one switch, it will not be found.
     TODO: Rewrite this function to include a more robust pathfinding algorithm that can handle multiple line switches and find the optimal route.
     TODO: Or scrap this function entirely?
+    NOTE: Pretty sure that the markscheme wants us to implement A* ourselves as raw as possible - probably not ideal to just get the route from the API
     """
 
     all_routes = get_tube_routes()  # Fetch all tube routes from the TFL API
@@ -147,13 +158,11 @@ def construct_graph(routes, stops=None):
         graph[stop] = list(sorted(set(graph[stop])))
     return graph
 
-
 def find_time(node, start_node, node_distances, graph):
     """
     Function to find the time to reach a node from the start node, based on the current node distances and the graph structure.
     """
     pass
-
 
 def find_route(graph, start, destination):
     """
@@ -171,14 +180,13 @@ def find_route(graph, start, destination):
     while route_found == False:
         graph_node = None
         for x in unvisited_nodes:
-            if find_time(x, start, node_distances, graph) < smallest:
-                smallest = find_time(x, start, node_distances, graph)
+            if find_time(x,start,node_distances,graph) < smallest:
+                smallest = find_time(x,start,node_distances,graph)
         if graph_node == destination:
             route_found == True
-            return node_distances
+            return(node_distances)
         else:
             node_distances[graph_node] = "distance + route"
-
     pass
 
 
@@ -190,10 +198,15 @@ def reconstruct_journey(route, graph):
     """
     pass
 
+def make_time_list():
+    return
+def setup_platforms(line):
+    timetable
+    return
 
 def main():
     result = get_routes_for_line("victoria", "outbound")
-    print(len(result), result[0][:5])
+    print(result)
 
 
 if __name__ == "__main__":
