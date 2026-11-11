@@ -6,7 +6,6 @@ class platform:
     line = ""
     direction = ""
     stations_left_on_route = {} # in the format {station:[time1,time2,time3 etc]}
-    train_leave_times = []
 
 
 class station:
