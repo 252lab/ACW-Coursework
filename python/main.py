@@ -1,15 +1,18 @@
 import requests
+from datetime import timedelta, datetime, timezone
 
 BASE_URL = "https://api.tfl.gov.uk"
 
-class platform:
-    line = ""
-    direction = ""
-    stations_left_on_route = {} # in the format {station:[time1,time2,time3 etc]}
-
+class train:
+    def __init__(self):
+        self.line = ""
+        self.direction = ""
+        self.stops = {}
 
 class station:
-    platforms = []#list of station objects
+    def __init__(self):
+        self.trains = []
+
 
 class route:
     current_platforms = [] #list of platform objects
@@ -27,6 +30,93 @@ def get_json(path):
     response.raise_for_status()  # Raise an error for bad responses
     return response.json()
 
+def get_station_id(station): #gets the NAPTAN id of a station. If already a NAPTAN id, returns the ID
+    if station.upper().startswith("9"):
+        return station
+    data = get_json(f"/StopPoint/Search/{station}")
+    matches = data.get("matches", [])
+    if not matches:
+        raise ValueError("Station not found")
+    return matches[0]["id"]
+
+def get_vehicle_predictions(vehicle_ids): #some trains have vehicle ids that track their jouneys(not all). this function gets the timetable for those trains
+    predictions = []
+    for i in range(0, len(vehicle_ids), 25):
+        ids = ",".join(vehicle_ids[i:i+25])
+        data = get_json(f"/Vehicle/{ids}/Arrivals")
+        predictions.extend(data)
+    return predictions
+
+def calculate_times(start_time, scheduled, live): #combines live predictions and timetables
+    result = {}
+    for station, scheduled_time in scheduled.items():
+        if station in live:
+            arrival = live[station]
+        else:
+            arrival = scheduled_time
+            result[station] = round((arrival - start_time).total_seconds() / 60)
+    return result
+
+
+from datetime import timedelta
+
+def get_trains(station, start_time, minutes=30):
+    station_id = get_station_id(station)
+    print("station id is " + station_id)
+    arrivals = get_json(f"/StopPoint/{station_id}/Arrivals")
+    arrival = arrivals[0]
+    timetable = get_json(
+        f"/Line/{arrival['lineId']}/Timetable/"
+        f"{arrival['naptanId']}/to/{arrival['destinationNaptanId']}"
+    )
+    print("LINE:", timetable["lineName"])
+    print("DIRECTION:", timetable["direction"])
+
+    print("\nSTATIONS:")
+    for s in timetable["stations"]:
+        print(s["id"], s["name"])
+
+    print("\nDEPARTURE STOP:")
+    print(timetable["timetable"]["departureStopId"])
+
+    print("\nROUTES:")
+    for route in timetable["timetable"]["routes"]:
+        print("Route keys:", route.keys())
+        print("Schedules:", route["schedules"][:1])
+        print("Intervals:", route["stationIntervals"][:3])
+    # filter arrivals
+    """arrivals = [
+        a for a in arrivals
+        if a.get("vehicleId")
+        and start_time <= datetime.fromisoformat(
+            a["expectedArrival"].replace("Z", "+00:00")
+        ) <= end_time
+        ]
+    print(arrivals)"""
+    trains = []
+    # Get unique vehicles
+    vehicle_ids = list(set(a["vehicleId"] for a in arrivals))
+    predictions = get_vehicle_predictions(vehicle_ids)
+    #group predictions by vehicle
+    vehicles = {}
+    for p in predictions:
+        vehicle_id = p.get("vehicleId")
+        if vehicle_id:
+            vehicles.setdefault(vehicle_id, []).append(p)
+    #making train objects
+    for arrival in arrivals:
+        vehicle_id = arrival["vehicleId"]
+        t = train()
+        t.line = arrival.get("lineName", "")
+        t.direction = arrival.get("direction", "")
+        for p in vehicles.get(vehicle_id, []):
+            name = p.get("stationName")
+            expected = p.get("expectedArrival")
+            if name and expected:
+                arrival_time = datetime.fromisoformat(expected.replace("Z", "+00:00"))
+                t.stops[name] = round((arrival_time - start_time).total_seconds() / 60)
+        trains.append(t)
+    return trains
 
 def get_tube_routes():
     """
@@ -197,15 +287,14 @@ def reconstruct_journey(route, graph):
     """
     pass
 
-def make_time_list():
-    return
-def setup_platforms(line):
-    timetable
-    return
 
 def main():
-    result = get_routes_for_line("victoria", "outbound")
-    print(result)
+    trains = get_trains("940GZZLUVIC",datetime.now(timezone.utc),30 )
+
+    for t in trains:
+        print(t.line)
+        print(t.direction)
+        print(t.stops)
 
 
 if __name__ == "__main__":
