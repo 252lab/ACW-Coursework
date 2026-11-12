@@ -42,7 +42,7 @@ Website link: https://252lab.github.io/ACW-Coursework
 Install the development dependencies and Chromium once, then run the test suite:
 
 ```bash
-pip install -r requirements-dev.txt
+pip install -r requirements.txt
 playwright install chromium
 pytest
 ```
