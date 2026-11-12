@@ -1,11 +1,17 @@
 import requests
 import pandas as pd
+import flask
 
 # used just for setting function up
 from flask import Flask, request, render_template
 app = Flask(__name__)
 
 BASE_URL = "https://api.tfl.gov.uk"
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
 
 def get_json(path):
     """
