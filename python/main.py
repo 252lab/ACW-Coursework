@@ -6,7 +6,7 @@ from functools import lru_cache
 BASE_URL = "https://api.tfl.gov.uk"
 
 """Opening the NAPTAN json to avoid constantly reopening it"""
-with open("python/naptan.json") as f:
+with open("naptan.json") as f:
     NAPTAN = json.load(f)
 
 STATION_NAMES = {
@@ -113,21 +113,30 @@ def get_trains(station, start_time, origin_time,minutes=30):
     # Create train objects
     timetables = {}
     for arrival in arrivals:
+
+        if not arrival.get("destinationNaptanId"):
+            print("Missing destinationNaptanId: ")
+            print(arrival)
+            continue
+
         vehicle_id = arrival["vehicleId"]
         t = train()
         t.line = arrival.get("lineName", "")
         t.direction = arrival.get("direction", "")
+
         # Reuse timetable data when multiple arrivals share the same trip.
         timetable_key = (
             arrival["lineId"],
             arrival["naptanId"],
             arrival["destinationNaptanId"],
         )
+        
         if timetable_key not in timetables:
             timetables[timetable_key] = get_json(
                 f"/Line/{timetable_key[0]}/Timetable/"
                 f"{timetable_key[1]}/to/{timetable_key[2]}"
             )
+
         timetable = timetables[timetable_key]
         station_order = get_station_order(timetable)
         for name, minutes in station_order:
@@ -135,9 +144,11 @@ def get_trains(station, start_time, origin_time,minutes=30):
             )
         print("Station order:", station_order)
         print("Number of stations:", len(station_order))
+
         # Initialise stops in timetable order
         for name in station_order:
             t.stops[name] = None
+        
         # Add live predictions for this vehicle only
         for p in vehicles.get(vehicle_id, []):
             name = p.get("stationName")
