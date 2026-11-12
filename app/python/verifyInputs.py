@@ -16,6 +16,8 @@ inputs. If the inputs are valid, they will then be sent to the algorithm.
 @app.route("/route_input", methods=["GET", "POST"])
 def route_input():
 
+    #TODO: Call loading page here!!!
+
     # initialising input variables
     startLocation = ""
     endLocation = ""
@@ -40,9 +42,11 @@ def route_input():
             startLocation, endLocation, startTime, endTime = validate_inputs(startLocation, endLocation, startTime, endTime)
 
             #TODO -> send to algorithm/proper backend here (Needs to handle time inputs there i think?)
+            # send to route page
 
         except:
             #TODO - temporary error message -> need to output html/css/js pop up
+            #Send back to index page
             print("Form elements cannot be retrieved")
 
 # function used to check if stations can be matched to API - TODO
