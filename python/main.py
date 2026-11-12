@@ -58,8 +58,6 @@ def calculate_times(start_time, scheduled, live): #combines live predictions and
     return result
 
 
-from datetime import timedelta
-
 def get_trains(station, start_time, minutes=30):
     station_id = get_station_id(station)
     print("station id is " + station_id)
@@ -143,7 +141,7 @@ def access_stop_point(stop_point_id):
     except requests.exceptions.RequestException as e:
         print(f"Error fetching stop point: {e}")
         return
-    print(stop.keys())
+    return set(stop.keys())
 
 
 def get_routes_for_line(line_id: str, direction: str) -> list[list[str]]:
@@ -162,8 +160,7 @@ def get_routes_between_two_stops_from_api(start, destination):
     Return a dictionary of relevant routes with their stop sequences.
     NOTE: This only works for max. one switch between lines. If the route requires more than one switch, it will not be found.
     TODO: Rewrite this function to include a more robust pathfinding algorithm that can handle multiple line switches and find the optimal route.
-    TODO: Or scrap this function entirely?
-    NOTE: Pretty sure that the markscheme wants us to implement A* ourselves as raw as possible - probably not ideal to just get the route from the API
+    NOTE: This function is currently not used in the codebase, but it could be edited to be used in the future for finding routes between two stops.
     """
 
     all_routes = get_tube_routes()  # Fetch all tube routes from the TFL API
