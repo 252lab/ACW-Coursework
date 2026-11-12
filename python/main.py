@@ -1,15 +1,20 @@
 import requests
 import json
 from datetime import timedelta, datetime, timezone
+from functools import lru_cache
 
 BASE_URL = "https://api.tfl.gov.uk"
 
 """Opening the NAPTAN json to avoid constantly reopening it"""
-with open("naptan.json") as f:
+with open("python/naptan.json") as f:
     NAPTAN = json.load(f)
 
 STATION_NAMES = {
     s["naptanID"]: s["commonName"]
+    for s in NAPTAN
+}
+STATION_IDS = {
+    s["commonName"].casefold(): s["naptanID"]
     for s in NAPTAN
 }
 class train:
@@ -40,15 +45,14 @@ def get_json(path):
     return response.json()
 
 def get_station_id(station):
-    with open("naptan.json", "r") as file:
-        stations = json.load(file)
     # Allow NAPTAN IDs directly
     if station.upper().startswith("9"):
         return station.upper()
-    # Find station by name
-    for s in stations:
-        if s["commonName"].lower() == station.lower():
-            return s["naptanID"]
+
+    # Use the station lookup loaded at startup instead of rereading the file.
+    station_id = STATION_IDS.get(station.casefold())
+    if station_id:
+        return station_id
     raise ValueError(f"Station not found: {station}")
 
 def get_vehicle_predictions(vehicle_ids): #some trains have vehicle ids that track their jouneys(not all). this function gets the timetable for those trains
@@ -107,15 +111,24 @@ def get_trains(station, start_time, origin_time,minutes=30):
         if vehicle_id:
             vehicles.setdefault(vehicle_id, []).append(p)
     # Create train objects
+    timetables = {}
     for arrival in arrivals:
         vehicle_id = arrival["vehicleId"]
         t = train()
         t.line = arrival.get("lineName", "")
         t.direction = arrival.get("direction", "")
-        # Get timetable for THIS train
-        timetable = get_json(
-            f"/Line/{arrival['lineId']}/Timetable/"
-            f"{arrival['naptanId']}/to/{arrival['destinationNaptanId']}")
+        # Reuse timetable data when multiple arrivals share the same trip.
+        timetable_key = (
+            arrival["lineId"],
+            arrival["naptanId"],
+            arrival["destinationNaptanId"],
+        )
+        if timetable_key not in timetables:
+            timetables[timetable_key] = get_json(
+                f"/Line/{timetable_key[0]}/Timetable/"
+                f"{timetable_key[1]}/to/{timetable_key[2]}"
+            )
+        timetable = timetables[timetable_key]
         station_order = get_station_order(timetable)
         for name, minutes in station_order:
             t.stops[name] = round((origin_time - start_time).total_seconds() / 60 + minutes
@@ -165,14 +178,20 @@ def access_stop_point(stop_point_id):
     return set(stop.keys())
 
 
+@lru_cache(maxsize=22)
+def _get_routes_for_line_cached(line_id: str, direction: str) -> tuple[tuple[str, ...], ...]:
+    """Cache the mostly static route sequences for each line and direction."""
+    response = get_json(f"/Line/{line_id}/Route/Sequence/{direction}")
+    ordered_line_routes = response.get("orderedLineRoutes", [])
+    return tuple(tuple(route.get("naptanIds", [])) for route in ordered_line_routes)
+
+
 def get_routes_for_line(line_id: str, direction: str) -> list[list[str]]:
     """
     Fetch all routes for a specific line from the TFL API.
     Returns a list of naptanIds for each route in the specified direction (inbound or outbound).
     """
-    response = get_json(f"/Line/{line_id}/Route/Sequence/{direction}")
-    orderedLineRoutes = response.get("orderedLineRoutes", [])
-    return [route.get("naptanIds", []) for route in orderedLineRoutes]
+    return [list(route) for route in _get_routes_for_line_cached(line_id, direction)]
 
 
 def get_routes_between_two_stops_from_api(start, destination):
