@@ -18,6 +18,8 @@ class Homepage:
         self.start_time_tab = page.get_by_role("button", name="Start Time")
         self.end_time_tab = page.get_by_role("button", name="End Time")
         self.map = page.locator("iframe")
+        self.error_message = page.locator("#error-message")
+        self.error_text = page.locator("#error-text")
 
     def open(self) -> None:
         self.page.goto(INDEX_URL)
@@ -79,7 +81,7 @@ def test_different_start_and_end_locations(homepage: Homepage) -> None:
     homepage.end_location.fill("Oxford Circus")
     homepage.submit_button.click()
     # there should be no error message displayed for different start and end locations
-    expect(homepage.page.locator("#error-message")).to_have_count(0)
+    expect(homepage.error_message).to_be_hidden()
 
 @pytest.mark.skip(reason="This test is currently failing as this feature has not been implemented yet.")
 def test_same_start_and_end_locations(homepage: Homepage) -> None:
@@ -90,7 +92,8 @@ def test_same_start_and_end_locations(homepage: Homepage) -> None:
     homepage.end_location.fill("King’s Cross St. Pancras")
     homepage.submit_button.click()
     # there should be an error message displayed for same start and end locations
-    expect(homepage.page.locator("#error-message")).to_have_text("Start and end locations cannot be the same.") # placeholder error message text
+    expect(homepage.error_text).to_have_text("Start and end locations cannot be the same.")
+    expect(homepage.error_message).to_be_visible()
 
 @pytest.mark.skip(reason="This test is currently failing as this feature has not been implemented yet.")
 def test_error_is_cleared_when_locations_are_changed(homepage: Homepage) -> None:
@@ -101,13 +104,14 @@ def test_error_is_cleared_when_locations_are_changed(homepage: Homepage) -> None
     homepage.end_location.fill("King’s Cross St. Pancras")
     homepage.submit_button.click()
     # there should be an error message displayed for same start and end locations
-    expect(homepage.page.locator("#error-message")).to_have_text("Start and end locations cannot be the same.") # placeholder error message text
+    expect(homepage.error_text).to_have_text("Start and end locations cannot be the same.")
+    expect(homepage.error_message).to_be_visible()
 
     # change the end location to a different value
     homepage.end_location.fill("Oxford Circus")
     homepage.submit_button.click()
     # there should be no error message displayed for different start and end locations
-    expect(homepage.page.locator("#error-message")).to_have_count(0)
+    expect(homepage.error_message).to_be_hidden()
 
 # Location input boxes cannot be empty
 
@@ -121,7 +125,7 @@ def test_start_location_cannot_be_empty(homepage: Homepage) -> None:
     homepage.submit_button.click()
     # there should be an error message displayed for empty start location
     # note: the id of the error message is "error-text", however, this test is still failing
-    expect(homepage.page.locator("#error-text")).to_have_text("Please fill in this field.") 
+    expect(homepage.error_text).to_have_text("Please fill in this field.")
 
 @pytest.mark.skip(reason="Need to verify intended functionality.")
 def test_end_location_cannot_be_empty(homepage: Homepage) -> None:
@@ -132,10 +136,10 @@ def test_end_location_cannot_be_empty(homepage: Homepage) -> None:
     homepage.end_location.fill("")
     homepage.submit_button.click()
     # there should be an error message displayed for empty end location
-    expect(homepage.page.locator("#error-text")).to_have_text("Please fill in this field.") # placeholder error message text
+    expect(homepage.error_text).to_have_text("Please fill in this field.")
 
 @pytest.mark.skip(reason="The page that should be displayed after submitting details hasn't been implemented yet.")
-def adding_start_location_clears_error_message(homepage: Homepage) -> None: 
+def test_adding_start_location_clears_error_message(homepage: Homepage) -> None:
     '''
     Test that adding a start location clears the error message for an empty start location input box.
     '''
@@ -143,16 +147,16 @@ def adding_start_location_clears_error_message(homepage: Homepage) -> None:
     homepage.end_location.fill("Oxford Circus")
     homepage.submit_button.click()
     # there should be an error message displayed for empty start location
-    expect(homepage.page.locator("#error-text")).to_have_text("Please fill in this field.") 
+    expect(homepage.error_text).to_have_text("Please fill in this field.")
 
     # add a start location
     homepage.start_location.fill("King’s Cross St. Pancras")
     homepage.submit_button.click()
     # there should be no error message displayed for empty start location
-    expect(homepage.page.locator("#error-text")).to_have_count(0)
+    expect(homepage.error_message).to_be_hidden()
 
 @pytest.mark.skip(reason="The page that should be displayed after submitting details hasn't been implemented yet.")
-def adding_end_location_clears_error_message(homepage: Homepage) -> None:
+def test_adding_end_location_clears_error_message(homepage: Homepage) -> None:
     '''
     Test that adding an end location clears the error message for an empty end location input box.
     '''
@@ -160,15 +164,16 @@ def adding_end_location_clears_error_message(homepage: Homepage) -> None:
     homepage.end_location.fill("")
     homepage.submit_button.click()
     # there should be an error message displayed for empty end location
-    expect(homepage.page.locator("#error-text")).to_have_text("Please fill in this field.") # placeholder error message text
+    expect(homepage.error_text).to_have_text("Please fill in this field.")
 
     # add an end location
     homepage.end_location.fill("Oxford Circus")
     homepage.submit_button.click()
     # there should be no error message displayed for empty end location
-    expect(homepage.page.locator("#error-text")).to_have_count(0)
+    expect(homepage.error_message).to_be_hidden()
 
 # The user cannot specify both a start time and an end time; they must choose one or the other.
+
 @pytest.mark.skip(reason="This functionality hasn't been implemented yet.")
 def test_start_time_and_no_end_time_is_valid(homepage: Homepage) -> None:
     '''
@@ -176,6 +181,7 @@ def test_start_time_and_no_end_time_is_valid(homepage: Homepage) -> None:
     '''
     homepage.start_location.fill("King’s Cross St. Pancras")
     homepage.end_location.fill("Oxford Circus")
+    homepage.start_time_tab.click()
     homepage.start_time.fill("08:00")
     homepage.submit_button.click()
     # there should be no error message displayed for specifying a start time without an end time
@@ -188,6 +194,7 @@ def test_end_time_and_no_start_time_is_valid(homepage: Homepage) -> None:
     '''
     homepage.start_location.fill("King’s Cross St. Pancras")
     homepage.end_location.fill("Oxford Circus")
+    homepage.end_time_tab.click()
     homepage.end_time.fill("09:00")
     homepage.submit_button.click()
     # there should be no error message displayed for specifying an end time without a start time
@@ -200,60 +207,34 @@ def test_both_start_time_and_end_time_is_invalid(homepage: Homepage) -> None:
     '''
     homepage.start_location.fill("King’s Cross St. Pancras")
     homepage.end_location.fill("Oxford Circus")
+    homepage.start_time_tab.click()
     homepage.start_time.fill("08:00")
+    homepage.end_time_tab.click()
     homepage.end_time.fill("09:00")
     homepage.submit_button.click()
     # there should be an error message displayed for specifying both a start time and an end time
-    expect(homepage.page.locator("#error-text")).to_have_text("Cannot specify both a start time and an end time.") # placeholder error message text
+    expect(homepage.error_text).to_have_text("Cannot specify both a start time and an end time.")
+    expect(homepage.error_message).to_be_visible()
 
-# Specifying an invalid start time or end time should be automatically edited to a valid time.
 
-def test_invalid_start_time_is_edited_to_valid_time(homepage: Homepage) -> None:
+@pytest.mark.skip(reason="This functionality hasn't been implemented yet.")
+def test_if_no_times_specified_start_time_is_set_to_current_time(homepage: Homepage) -> None:
     '''
-    Test that specifying an invalid start time is automatically edited to a valid time.
+    Test that if no start time or end time is specified, the start time is set to the current time.
     '''
-    # NOTE: currently failing
+    expected_time = homepage.page.evaluate("""() => {
+        const now = new Date();
+        return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    }""")
+
     homepage.start_location.fill("King’s Cross St. Pancras")
     homepage.end_location.fill("Oxford Circus")
-    homepage.start_time.fill("25:00")  # invalid time
+    expect(homepage.start_time).to_have_value("")
+    expect(homepage.end_time).to_have_value("")
     homepage.submit_button.click()
-    # the start time should be automatically edited to any valid time between 00:00 and 23:59
-    # TODO: double check that this is the intended logic! 
-    # this is the logic automatically provided by the HTML input type="time" element, but it may not be the intended logic for  our project!
-    expect(homepage.start_time_tab).to_have_value(lambda value: value >= "00:00" and value <= "23:59")
+    expect(homepage.error_message).to_be_hidden()
+    expect(homepage.start_time).to_have_value(expected_time)
 
-
-def test_invalid_end_time_is_edited_to_valid_time(homepage: Homepage) -> None:
-    '''
-    Test that specifying an invalid end time is automatically edited to a valid time.
-    '''
-    # NOTE: currently failing
-    homepage.start_location.fill("King’s Cross St. Pancras")
-    homepage.end_location.fill("Oxford Circus")
-    homepage.end_time.fill("25:00")  # invalid time
-    homepage.submit_button.click()
-    # the end time should be automatically edited to any valid time between 00:00 and 23:59
-    # TODO: double check that this is the intended logic! 
-    # this is the logic automatically provided by the HTML input type="time" element, but it may not be the intended logic for  our project!
-    expect(homepage.end_time_tab).to_have_value(lambda value: value >= "00:00" and value <= "23:59")
-
-# Specifying an invalid start and end time should be automatically edited to valid times, however there should be an error message displayed as BOTH times were specified
-
-def test_invalid_start_and_end_time_edited_and_error_message_displayed(homepage: Homepage) -> None:
-    '''
-    Test that specifying an invalid start and end time is automatically edited to valid times, and an error message is displayed.
-    '''
-    # NOTE: currently failing
-    homepage.start_location.fill("King’s Cross St. Pancras")
-    homepage.end_location.fill("Oxford Circus")
-    homepage.start_time.fill("25:00")  # invalid time
-    homepage.end_time.fill("25:00")  # invalid time
-    homepage.submit_button.click()
-    # the start and end times should be automatically edited to any valid time between 00:00 and 23:59
-    expect(homepage.start_time_tab).to_have_value(lambda value: value >= "00:00" and value <= "23:59")
-    expect(homepage.end_time_tab).to_have_value(lambda value: value >= "00:00" and value <= "23:59")
-    # there should be an error message displayed for specifying both a start time and an end time
-    expect(homepage.page.locator("#error-text")).to_have_text("Cannot specify both a start time and an end time.") # placeholder error message text
 
 # test that whitespace is stripped from the station inputs (e.g. "  Oxford Circus  " should be treated as "Oxford Circus")
 
@@ -265,7 +246,7 @@ def test_valid_start_station_with_whitespace(homepage: Homepage) -> None:
     homepage.end_location.fill("King’s Cross St. Pancras")
     homepage.submit_button.click()
     # there should be no error message displayed for a valid start station
-    expect(homepage.page.locator("#error-text")).to_have_count(0)
+    expect(homepage.error_message).to_be_hidden()
 
 def test_valid_end_station_with_whitespace(homepage: Homepage) -> None:
     '''
@@ -275,6 +256,6 @@ def test_valid_end_station_with_whitespace(homepage: Homepage) -> None:
     homepage.end_location.fill("  Oxford Circus  ")  # valid station with whitespace
     homepage.submit_button.click()
     # there should be no error message displayed for a valid end station
-    expect(homepage.page.locator("#error-text")).to_have_count(0)
+    expect(homepage.error_message).to_be_hidden()
 
 # test that the user's station inputs are valid stations on the London Underground network
