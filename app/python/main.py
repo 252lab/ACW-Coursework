@@ -1,10 +1,12 @@
 import requests
 import pandas as pd
 import flask
+from flask_frozen import Freezer
 
 # used just for setting function up
 from flask import Flask, request, render_template
 app = Flask(__name__)
+freezer = Freezer(app)
 
 BASE_URL = "https://api.tfl.gov.uk"
 
@@ -42,4 +44,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    freezer.freeze()
