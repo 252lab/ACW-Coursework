@@ -197,8 +197,37 @@ def test_both_start_time_and_end_time_is_invalid(homepage: Homepage) -> None:
     # there should be an error message displayed for specifying both a start time and an end time
     expect(homepage.page.locator("#error-message")).to_have_text("Cannot specify both a start time and an end time.") # placeholder error message text
 
+# Specifying an invalid start time or end time should be automatically edited to a valid time.
+
+def test_invalid_start_time_is_edited_to_valid_time(homepage: Homepage) -> None:
+    '''
+    Test that specifying an invalid start time is automatically edited to a valid time.
+    '''
+    homepage.start_location.fill("King’s Cross St. Pancras")
+    homepage.end_location.fill("Oxford Circus")
+    homepage.start_time.fill("25:00")  # invalid time
+    homepage.submit_button.click()
+    # the start time should be automatically edited to any valid time between 00:00 and 23:59
+    # TODO: double check that this is the intended logic! 
+    # this is the logic automatically provided by the HTML input type="time" element, but it may not be the intended logic for  our project!
+    expect(homepage.start_time).to_have_value(lambda value: value >= "00:00" and value <= "23:59")
+
+def test_invalid_end_time_is_edited_to_valid_time(homepage: Homepage) -> None:
+    '''
+    Test that specifying an invalid end time is automatically edited to a valid time.
+    '''
+    homepage.start_location.fill("King’s Cross St. Pancras")
+    homepage.end_location.fill("Oxford Circus")
+    homepage.end_time.fill("25:00")  # invalid time
+    homepage.submit_button.click()
+    # the end time should be automatically edited to any valid time between 00:00 and 23:59
+    # TODO: double check that this is the intended logic! 
+    # this is the logic automatically provided by the HTML input type="time" element, but it may not be the intended logic for  our project!
+    expect(homepage.end_time).to_have_value(lambda value: value >= "00:00" and value <= "23:59")
+
+
+
 # todo list of things to test:
-# specifying an invalid start time should be automatically edited to a valid time
 # specifying an invalid end time should be automatically edited to a valid time
 # specifying an invalid start and end time should be automatically edited to valid times, however there should be an error message displayed as BOTH times were specified 
 # test that the user's station inputs are valid stations on the London Underground network (i.e. they exist in the tube_stations.json file)
