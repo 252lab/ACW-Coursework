@@ -173,6 +173,7 @@ def test_adding_end_location_clears_error_message(homepage: Homepage) -> None:
     expect(homepage.error_message).to_be_hidden()
 
 # The user cannot specify both a start time and an end time; they must choose one or the other.
+
 @pytest.mark.skip(reason="This functionality hasn't been implemented yet.")
 def test_start_time_and_no_end_time_is_valid(homepage: Homepage) -> None:
     '''
@@ -214,7 +215,26 @@ def test_both_start_time_and_end_time_is_invalid(homepage: Homepage) -> None:
     # there should be an error message displayed for specifying both a start time and an end time
     expect(homepage.error_text).to_have_text("Cannot specify both a start time and an end time.")
     expect(homepage.error_message).to_be_visible()
-    
+
+
+@pytest.mark.skip(reason="This functionality hasn't been implemented yet.")
+def test_if_no_times_specified_start_time_is_set_to_current_time(homepage: Homepage) -> None:
+    '''
+    Test that if no start time or end time is specified, the start time is set to the current time.
+    '''
+    expected_time = homepage.page.evaluate("""() => {
+        const now = new Date();
+        return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    }""")
+
+    homepage.start_location.fill("King’s Cross St. Pancras")
+    homepage.end_location.fill("Oxford Circus")
+    expect(homepage.start_time).to_have_value("")
+    expect(homepage.end_time).to_have_value("")
+    homepage.submit_button.click()
+    expect(homepage.error_message).to_be_hidden()
+    expect(homepage.start_time).to_have_value(expected_time)
+
 
 # test that whitespace is stripped from the station inputs (e.g. "  Oxford Circus  " should be treated as "Oxford Circus")
 
