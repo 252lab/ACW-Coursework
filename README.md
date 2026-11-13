@@ -57,3 +57,9 @@ Website link: https://252lab.github.io/ACW-Coursework
 ## Data sources
 
 TfL API: https://api.tfl.gov.uk
+
+## Team members and responsibilities:
+
+Livia Banyai: Back-end development (helper functions, caching), automated test suites (frontend and backend), repository maintenance (updating conftest.py, README, requirements.txt, etc.)
+
+# TODO: everyone summarise what you've done!
