@@ -184,8 +184,8 @@ def _get_routes_for_line_cached(line_id: str, direction: str) -> tuple[tuple[str
     return tuple(tuple(route.get("naptanIds", [])) for route in ordered_line_routes)
 
 
-def heuristic(last_station, new_station, heuristic_type="djistraka"):  # ADD ACTUAL HEURISTIC HERE
-    if heuristic_type == "djistraka":
+def heuristic(last_station, new_station, heuristic_type="dijkstra"):  # ADD ACTUAL HEURISTIC HERE
+    if heuristic_type == "dijkstra":
         return 0
     else:
         return 0
@@ -195,15 +195,15 @@ def init_route(start_station):
     # edit this so that it does two things:
     # 1. creates the starting route with the start station and time 0
     # 2. gets the available stations from the start station and adds them to the route
-    new_route = Route(start_station, 0)
-    return new_route
+    initial_route = Route(start_station, 0)
+    return initial_route
 
 
-def new_route(old_route, new_station, start_time, current_time, new_train):
-    new_route = Route(new_station, current_time)
-    new_route.current_trains = old_route.current_trains.copy()
-    new_route.current_trains.append(new_train)
-    new_route.parent = old_route
+def build_route(old_route, new_station, start_time, current_time, new_train):
+    next_route = Route(new_station, current_time)
+    next_route.current_trains = old_route.current_trains.copy()
+    next_route.current_trains.append(new_train)
+    next_route.parent = old_route
     arrival_time = start_time + timedelta(minutes=current_time)
     available_trains = get_trains(new_station, start_time, arrival_time)
     # Find available stations
@@ -211,22 +211,22 @@ def new_route(old_route, new_station, start_time, current_time, new_train):
         for group in train.stops:
             for station_name, arrival in group.items():
                 if arrival > current_time:
-                    if station_name not in new_route.available_stations:
-                        new_route.available_stations[station_name] = {
+                    if station_name not in next_route.available_stations:
+                        next_route.available_stations[station_name] = {
                             "time": arrival,
                             "train": train
                         }
-    return new_route
+    return next_route
 
 
-def astar_step(explored_routes, explored_stations, heuristic="djistraka"):  # it is misspelled. fix later
+def astar_step(explored_routes, explored_stations, start_time, heuristic_type="dijkstra"):
     time_to_change = 5
     available_stations = {}  # check that dicts are ordered
-    for route in explored_routes:
-        for station, details in route.available_stations.items():
+    for current_route in explored_routes:
+        for station, details in current_route.available_stations.items():
             if station not in explored_stations:
                 potential_time = details["time"]
-                if route.parent is not None:
+                if current_route.parent is not None:
                     potential_time += time_to_change
                 if (
                     station not in available_stations
@@ -235,7 +235,7 @@ def astar_step(explored_routes, explored_stations, heuristic="djistraka"):  # it
                     available_stations[station] = {
                         "time": potential_time,
                         "train": details["train"],
-                        "route": route,
+                        "route": current_route,
                     }
     shortest_routes = []
     current_shortest = float("inf")
@@ -257,7 +257,7 @@ def astar_step(explored_routes, explored_stations, heuristic="djistraka"):  # it
             potential_time = available_stations[station]["time"]
             # calculate the heuristic value to the new station
             heuristic_value = heuristic(
-                available_stations[station]["route"].station, station, heuristic
+                available_stations[station]["route"].station, station, heuristic_type
             )
             # calculate the total time from the current station to the next station, using the potential time and the heuristic value
             total_time = potential_time + heuristic_value
@@ -274,27 +274,30 @@ def astar_step(explored_routes, explored_stations, heuristic="djistraka"):  # it
                 potential_times.values()
             ):  # if the time is the shortest time, then make a new route with that station and return it
                 new_station = time  # set the new station to the station with the shortest time
-                new_route = new_route(
+                next_route = build_route(
                     available_stations[new_station]["route"],
                     new_station,
+                    start_time,
                     available_stations[new_station]["time"],
                     available_stations[new_station]["train"],
                 )  # make a new route with the shortest time and the new station
                 break
 
-    return new_route, new_station
+    return next_route, new_station
 
 
 def main(start_station, end_station, start_time):
     route_found = False
     routes = [init_route(start_station)]
     explored_stations = [start_station]
-    while route_found == False:
-        new_route, new_station = astar_step(routes, explored_stations)
-        routes.append(new_route)
-        explored_stations.append(new_station)
-        if new_route.route_complete:
-            print(new_route)
+    while not route_found:
+        next_route, next_station = astar_step(routes, explored_stations, start_time)
+        if next_route is None:
+            return None
+        routes.append(next_route)
+        explored_stations.append(next_station)
+        if next_route.route_complete:
+            print(next_route)
             route_found = True
 
 
