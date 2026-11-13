@@ -84,6 +84,7 @@ def find_station(stationName):
     elif (foundMatches.len() > 1):
         pass
         # need to handle two stations having similar names
+        # return the shorter one
 
     # find a specific stop based on its name
     # and return its ID
