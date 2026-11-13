@@ -61,7 +61,7 @@ def route_input():
     endTime = ""
 
     # if the form request method is post
-    if request.method("POST"):
+    if request.method=="POST":
 
         # try to get the form inputs
         # removing any extra spaces and changing them to lowecase, to make it 
@@ -72,7 +72,7 @@ def route_input():
 
             # default is an empty string if no input for the time
             startTime = request.form.get("startTime", "").strip()
-            endTime = request.form.get("EndTime", "").strip()
+            endTime = request.form.get("endTime", "").strip()
             
             # call function to validate inputs (and update then when necessary)
             startLocation, endLocation, startTime, endTime = validate_inputs(startLocation, endLocation, startTime, endTime)

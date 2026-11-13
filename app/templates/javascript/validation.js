@@ -1,7 +1,9 @@
 const form = document.getElementById("routeForm");
 const errorBox = document.getElementById("error-message");
 const errorText = document.getElementById("error-text");
-
+if(form){
+    
+}
 form.addEventListener("submit", function (event) {
     const startTime = document.getElementById("startTime").value;
     const endTime = document.getElementById("endTime").value;
@@ -25,5 +27,5 @@ form.addEventListener("submit", function (event) {
 
 // function to switch from the index page to the route page
 function switchPage(){
-    window.location.pathname = "route.html";
+    window.location.href = "route.html";
 }

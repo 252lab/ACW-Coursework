@@ -60,7 +60,7 @@ def validate_inputs(startLocation, endLocation, startTime, endTime):
 def find_station(stationName):
 
     # converting the station name to lower case and removing any extra paces
-    toMatch = stationName.toLower().replace(" ", "")
+    toMatch = stationName.lower().replace(" ", "")
     foundMatches = []
     listStations = list_stations()
 
@@ -78,10 +78,10 @@ def find_station(stationName):
         pass
 
 
-    if (foundMatches.len() == 1):
+    if (len(foundMatches) == 1):
         return foundMatches[0]
     
-    elif (foundMatches.len() > 1):
+    elif (len(foundMatches) > 1):
         pass
         # need to handle two stations having similar names
         # return the shorter one
