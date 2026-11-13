@@ -28,7 +28,7 @@ class station:
 
 
 class route:
-    def __init__(self, station, arrival_time):
+    def __init__(self, station, current_time):
         self.station = station
         self.current_time = current_time
 
@@ -36,7 +36,7 @@ class route:
         self.available_stations = {}
 
         self.parent = None
-        self.total_time = 0
+        self.total_time = current_time
         self.heuristic = 0
         self.f_score = 0
 
@@ -192,6 +192,9 @@ def heuristic(last_station, new_station, heuristic_type="djistraka"):  # ADD ACT
 
 
 def init_route(start_station):
+    # edit this so that it does two things:
+    # 1. creates the starting route with the start station and time 0
+    # 2. gets the available stations from the start station and adds them to the route
     new_route = route(start_station, 0)
     return new_route
 
@@ -206,12 +209,13 @@ def new_route(old_route, new_station, start_time, current_time, new_train):
     # Find available stations
     for train in available_trains:
         for group in train.stops:
-            for station, arrival in group.items():
+            for station_name, arrival in group.items():
                 if arrival > current_time:
-                    if station not in new_route.available_stations:
-                        new_route.available_stations[station] = {"time": arrival, "train": train}
-                    elif arrival < new_route.available_stations[station]["time"]:
-                        new_route.available_stations[station] = {"time": arrival, "train": train}
+                    if station_name not in new_route.available_stations:
+                        new_route.available_stations[station_name] = {
+                            "time": arrival,
+                            "train": train
+                        }
     return new_route
 
 
