@@ -18,31 +18,26 @@ STATION_IDS = {
     s["commonName"].casefold(): s["naptanID"]
     for s in NAPTAN
 }
-class train:
+class train: #represents the physical train and the stops that it takes
     def __init__(self):
-        self.line = ""
-        self.direction = ""
-        self.stops = []
+        self.line = "" #line that the train is on
+        self.direction = "" #inbound/outbound train
+        self.stops = [] #list of dictionaries, with station names and relative times. Each one represents a variation on that route that the train could take
 
-class station:
+class station:#possibly defunct
     def __init__(self):
-        self.trains = []
+        self.coordinates
 
 
-class route:
+class route: #represnts one stop on journey. linked to previous stops.
     def __init__(self, station, arrival_time):
-        self.station = station
-        self.current_time = current_time
-
-        self.current_trains = []
-        self.available_stations = {}
-
-        self.parent = None
-        self.total_time = 0
-        self.heuristic = 0
-        self.f_score = 0
-
-        self.route_complete = False
+        self.station = station #the station (node) that route represents
+        self.current_time = arrival_time #this eventually holds the current time in datetime format - if route is not the first station, is updated by new route function
+        self.current_trains = [] #trains used to get to this station
+        self.available_stations = {} #available stations and their times from get_trains
+        self.parent = None #if route is not first station, links to previous route object
+        self.total_time = 0 #time in minutes since journey started
+        self.route_complete = False #checks if route has been completed. If this os true, this is the final route object in the chain.
 
 
 def get_json(path):
@@ -54,12 +49,14 @@ def get_json(path):
     response.raise_for_status()  # Raise an error for bad responses
     return response.json()
 
-def get_station_id(station):
+def get_station_id(station):#gets the station from the stationname string
     # Allow NAPTAN IDs directly
     if station.upper().startswith("9"):
         return station.upper()
+    if station.endswith(" Underground Station"):
+        return station
     # Use the station lookup loaded at startup instead of rereading the file.
-    station_id = STATION_IDS.get((station+ " Underground Station").casefold())
+    station_id = STATION_IDS.get((station+ " Underground Station").casefold()) #changes the format to get stations from the json
     if station_id:
         return station_id
     raise ValueError(f"Station not found: {station}")
@@ -98,12 +95,14 @@ def get_station_order(timetable):
         station_groups.append(stations)
     return station_groups
 
-def get_trains(station, start_time, arrival_time,minutes=30):
+def get_trains(station, start_time, arrival_time,minutes=30): #this function collects the trains from a given station
+    #gets the station id from input
     station_id = get_station_id(station)
-    print("station id is "+ station_id)
+    #calculates the timedate formatted end time
     end_time = arrival_time + timedelta(minutes=minutes)
+    #gets a list of all the arrivals to the given station
     arrivals = get_json(f"/StopPoint/{station_id}/Arrivals")
-    # Filter arrivals
+    # Filter arrivals for time they arrive and make sure they are in the time window
     arrivals = [
         a for a in arrivals
         if a.get("vehicleId")
@@ -111,7 +110,6 @@ def get_trains(station, start_time, arrival_time,minutes=30):
         and arrival_time <= datetime.fromisoformat(
             a["expectedArrival"].replace("Z", "+00:00")
         ) <= end_time]
-    print("there are "+str(len(arrivals))+" arrivals")
     trains = []
     # Get unique vehicles
     vehicle_ids = list(set(
@@ -146,7 +144,9 @@ def get_trains(station, start_time, arrival_time,minutes=30):
                 f"/Line/{timetable_key[0]}/Timetable/"
                 f"{timetable_key[1]}/to/{timetable_key[2]}")
         timetable = timetables[timetable_key]
+        #gets the station order for a given line
         station_groups = get_station_order(timetable)
+        #for the order, fills in the time with the minutes
         for group in station_groups:
             stops = {}
             for name, minutes in group:
@@ -166,7 +166,6 @@ def get_trains(station, start_time, arrival_time,minutes=30):
     for t in trains:
         print("\nLine:", t.line)
         print("Direction:", t.direction)
-
         for i, stops in enumerate(t.stops):
             print(f"Interval group {i}:")
             print(stops)
@@ -263,6 +262,6 @@ def main(start_station,end_station,start_time):
 
 
 
-get_trains("Waterloo",datetime.now(timezone.utc),datetime.now(timezone.utc))
+print(get_trains("Waterloo",datetime.now(timezone.utc),datetime.now(timezone.utc)))
 #if __name__ == "__main__":
     #main()
