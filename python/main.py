@@ -87,9 +87,9 @@ def calculate_times(start_time, scheduled, live):  # combines live predictions a
 
 
 def get_station_order(timetable):
-    route = timetable["timetable"]["routes"][0]
+    route_data = timetable["timetable"]["routes"][0]
     station_groups = []
-    for interval_group in route["stationIntervals"]:
+    for interval_group in route_data["stationIntervals"]:
         stations = []
         for interval in interval_group["intervals"]:
             station_id = interval["stopId"]
@@ -135,7 +135,7 @@ def get_trains(station, start_time, arrival_time, minutes=30):
             print(arrival)
             continue
         vehicle_id = arrival["vehicleId"]
-        t = train()
+        t = Train()
         t.line = arrival.get("lineName", "")
         t.direction = arrival.get("direction", "")
         # Reuse timetable data when multiple arrivals share the same trip.
@@ -195,12 +195,12 @@ def init_route(start_station):
     # edit this so that it does two things:
     # 1. creates the starting route with the start station and time 0
     # 2. gets the available stations from the start station and adds them to the route
-    new_route = route(start_station, 0)
+    new_route = Route(start_station, 0)
     return new_route
 
 
 def new_route(old_route, new_station, start_time, current_time, new_train):
-    new_route = route(new_station, current_time)
+    new_route = Route(new_station, current_time)
     new_route.current_trains = old_route.current_trains.copy()
     new_route.current_trains.append(new_train)
     new_route.parent = old_route
@@ -293,9 +293,9 @@ def main(start_station, end_station, start_time):
         new_route, new_station = astar_step(routes, explored_stations)
         routes.append(new_route)
         explored_stations.append(new_station)
-        if new_route.completion_status == True:
-           print(new_route)
-           route_found = True
+        if new_route.route_complete:
+            print(new_route)
+            route_found = True
 
 
 get_trains("Waterloo", datetime.now(timezone.utc), datetime.now(timezone.utc))
