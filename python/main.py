@@ -2,6 +2,7 @@ import requests
 import json
 from datetime import timedelta, datetime, timezone
 from functools import lru_cache
+from dataclasses import dataclass
 
 BASE_URL = "https://api.tfl.gov.uk"
 
@@ -21,7 +22,7 @@ class train:
     def __init__(self):
         self.line = ""
         self.direction = ""
-        self.stops = {}
+        self.stops = []
 
 class station:
     def __init__(self):
@@ -29,10 +30,19 @@ class station:
 
 
 class route:
-    current_platforms = [] #list of platform objects
-    available_platforms = {} #combination of all of the station_left_on_route dictionaries from current_platform objects
-                             #plus other platforms in the available stations
-    current_time = 0
+    def __init__(self, station, arrival_time):
+        self.station = station
+        self.current_time = current_time
+
+        self.current_trains = []
+        self.available_stations = {}
+
+        self.parent = None
+        self.total_time = 0
+        self.heuristic = 0
+        self.f_score = 0
+
+        self.route_complete = False
 
 
 def get_json(path):
@@ -48,9 +58,8 @@ def get_station_id(station):
     # Allow NAPTAN IDs directly
     if station.upper().startswith("9"):
         return station.upper()
-
     # Use the station lookup loaded at startup instead of rereading the file.
-    station_id = STATION_IDS.get(station.casefold())
+    station_id = STATION_IDS.get((station+ " Underground Station").casefold())
     if station_id:
         return station_id
     raise ValueError(f"Station not found: {station}")
@@ -75,26 +84,31 @@ def calculate_times(start_time, scheduled, live): #combines live predictions and
 
 def get_station_order(timetable):
     route = timetable["timetable"]["routes"][0]
-    stations = []
+    station_groups = []
     for interval_group in route["stationIntervals"]:
+        stations = []
         for interval in interval_group["intervals"]:
             station_id = interval["stopId"]
             name = STATION_NAMES.get(station_id)
             if name:
-                stations.append((name, interval["timeToArrival"]))
-    return stations
+                stations.append((
+                    name,
+                    interval["timeToArrival"]
+                ))
+        station_groups.append(stations)
+    return station_groups
 
-def get_trains(station, start_time, origin_time,minutes=30):
+def get_trains(station, start_time, arrival_time,minutes=30):
     station_id = get_station_id(station)
     print("station id is "+ station_id)
-    end_time = start_time + timedelta(minutes=minutes)
+    end_time = arrival_time + timedelta(minutes=minutes)
     arrivals = get_json(f"/StopPoint/{station_id}/Arrivals")
     # Filter arrivals
     arrivals = [
         a for a in arrivals
         if a.get("vehicleId")
         and a.get("expectedArrival")
-        and start_time <= datetime.fromisoformat(
+        and arrival_time <= datetime.fromisoformat(
             a["expectedArrival"].replace("Z", "+00:00")
         ) <= end_time]
     print("there are "+str(len(arrivals))+" arrivals")
@@ -113,80 +127,50 @@ def get_trains(station, start_time, origin_time,minutes=30):
     # Create train objects
     timetables = {}
     for arrival in arrivals:
-
         if not arrival.get("destinationNaptanId"):
             print("Missing destinationNaptanId: ")
             print(arrival)
             continue
-
         vehicle_id = arrival["vehicleId"]
         t = train()
         t.line = arrival.get("lineName", "")
         t.direction = arrival.get("direction", "")
-
         # Reuse timetable data when multiple arrivals share the same trip.
         timetable_key = (
             arrival["lineId"],
             arrival["naptanId"],
             arrival["destinationNaptanId"],
         )
-        
         if timetable_key not in timetables:
             timetables[timetable_key] = get_json(
                 f"/Line/{timetable_key[0]}/Timetable/"
-                f"{timetable_key[1]}/to/{timetable_key[2]}"
-            )
-
+                f"{timetable_key[1]}/to/{timetable_key[2]}")
         timetable = timetables[timetable_key]
-        station_order = get_station_order(timetable)
-        for name, minutes in station_order:
-            t.stops[name] = round((origin_time - start_time).total_seconds() / 60 + minutes
-            )
-        print("Station order:", station_order)
-        print("Number of stations:", len(station_order))
-
-        # Initialise stops in timetable order
-        for name in station_order:
-            t.stops[name] = None
-        
+        station_groups = get_station_order(timetable)
+        for group in station_groups:
+            stops = {}
+            for name, minutes in group:
+                stops[name] = round((arrival_time - start_time).total_seconds() / 60 + minutes)
+            t.stops.append(stops)
         # Add live predictions for this vehicle only
         for p in vehicles.get(vehicle_id, []):
             name = p.get("stationName")
             expected = p.get("expectedArrival")
-            if name in t.stops and expected:
-                arrival_time = datetime.fromisoformat(
-                    expected.replace("Z", "+00:00"))
-                t.stops[name] = round(
-                    (arrival_time - start_time).total_seconds() / 60)
+            if name and expected:
+                predicted_arrival = datetime.fromisoformat(expected.replace("Z", "+00:00"))
+                predicted_minutes = round((predicted_arrival - start_time).total_seconds() / 60)
+                for stops in t.stops:
+                    if name in stops:
+                        stops[name] = predicted_minutes
         trains.append(t)
+    for t in trains:
+        print("\nLine:", t.line)
+        print("Direction:", t.direction)
+
+        for i, stops in enumerate(t.stops):
+            print(f"Interval group {i}:")
+            print(stops)
     return trains
-
-def get_tube_routes():
-    """
-    Fetch all tube routes from the TFL API.
-    Returns a list of tube route dictionaries.
-    """
-    return get_json("/Line/Mode/tube")
-
-
-def get_stop_point(stop_point_id):
-    """
-    Fetch a specific stop point from the TFL API.
-    Returns a dictionary containing the stop point details.
-    """
-    return get_json(f"/StopPoint/{stop_point_id}")
-
-
-def access_stop_point(stop_point_id):
-    """
-    Access a specific stop point and return its keys.
-    """
-    try:
-        stop = get_stop_point(stop_point_id)
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching stop point: {e}")
-        return
-    return set(stop.keys())
 
 
 @lru_cache(maxsize=22)
@@ -197,153 +181,88 @@ def _get_routes_for_line_cached(line_id: str, direction: str) -> tuple[tuple[str
     return tuple(tuple(route.get("naptanIds", [])) for route in ordered_line_routes)
 
 
-def get_routes_for_line(line_id: str, direction: str) -> list[list[str]]:
-    """
-    Fetch all routes for a specific line from the TFL API.
-    Returns a list of naptanIds for each route in the specified direction (inbound or outbound).
-    """
-    return [list(route) for route in _get_routes_for_line_cached(line_id, direction)]
+def heuristic(last_station,new_station,heuristic_type = "djistraka"): #ADD ACTUAL HEURISTIC HERE
+    if (heuristic_type== "djistraka"):
+        return 0
+    else:
+        return 0
+
+def init_route(start_station):
+    new_route = route(start_station, 0)
+    return new_route
+
+def new_route(old_route,new_station,start_time,current_time,new_train):
+    new_route = route(new_station,current_time)
+    new_route.current_trains = old_route.current_trains.copy()
+    new_route.current_trains.append(new_train)
+    new_route.parent = old_route
+    arrival_time = start_time + timedelta(minutes=current_time)
+    available_trains = get_trains(
+        new_station,
+        start_time,
+        arrival_time)
+    # Find available stations
+    for train in available_trains:
+        for group in train.stops:
+            for station, arrival in group.items():
+                if arrival > current_time:
+                    if station not in new_route.available_stations:
+                        new_route.available_stations[station] = {
+                            "time": arrival,
+                            "train": train }
+                    elif arrival < new_route.available_stations[station]["time"]:
+                        new_route.available_stations[station] = {
+                            "time": arrival,
+                            "train": train }
+    return new_route
 
 
-def get_routes_between_two_stops_from_api(start, destination):
-    """
-    Fetch all tube routes from the TFL API and filter them to find routes that connect the start and destination stops.
-    Return a dictionary of relevant routes with their stop sequences.
-    NOTE: This only works for max. one switch between lines. If the route requires more than one switch, it will not be found.
-    TODO: Rewrite this function to include a more robust pathfinding algorithm that can handle multiple line switches and find the optimal route.
-    NOTE: This function is currently not used in the codebase, but it could be edited to be used in the future for finding routes between two stops.
-    """
-
-    all_routes = get_tube_routes()  # Fetch all tube routes from the TFL API
-    relevant_routes = {}
-
-    for route in all_routes:
-        route_id = route.get("id")
-        if not route_id:
-            continue
-
-        try:
-            route_sequence = get_json(f"/Line/{route_id}/Route/Sequence")
-        except requests.exceptions.RequestException as e:
-            print(f"Error fetching stop points for route {route_id}: {e}")
-            continue
-
-        if start in route_sequence and destination in route_sequence:
-            relevant_routes[route_id] = route_sequence
-
-    return relevant_routes
-
-
-def get_list_of_lines():
-    """
-    Creates a list of one-value dictionaries.
-    The line is the key, and the value is a list of dictionaries containing the inbound and outbound stop lists.
-    """
-    # list of valid tube lines
-    LINES = [
-        "bakerloo",
-        "central",
-        "circle",
-        "district",
-        "hammersmith-city",
-        "jubilee",
-        "metropolitan",
-        "northern",
-        "piccadilly",
-        "victoria",
-        "waterloo-city",
-    ]
-    stop_list = []
-    for line in LINES:
-        line_list = {line: []}
-        for direction in ["inbound", "outbound"]:  # get the inbound/outbound list as separate
-            routes = get_routes_for_line(line, direction)
-            naptan_ids = routes[0]
-            direction_stop_list = {direction: naptan_ids}
-            line_list[line].append(direction_stop_list)
-        stop_list.append(line_list)
-    return stop_list
+def astar_step(explored_routes, explored_stations, heuristic = "djistraka"): #it is misspelled. fix later
+    time_to_change = 5
+    available_stations = {} #check that dicts are ordered
+    for route in explored_routes:
+        for station, details in route.available_stations.items():
+            if station not in explored_stations:
+                potential_time = details["time"]
+                if route.parent is not None:
+                    potential_time += time_to_change
+                if (station not in available_stations or potential_time < available_stations[station]["time"]):
+                    available_stations[station] = {
+                        "time": potential_time,
+                        "train": details["train"],
+                        "route": route }
+    shortest_routes = []
+    current_shortest = float("inf")
+    for x in available_stations:
+        if available_stations[x]["time"] < current_shortest:
+            shortest_routes = [x]
+            current_shortest = x["time"]
+        if available_stations[x]["time"] == current_shortest:
+            shortest_routes.append(x)
+    for x in shortest_routes:
+        pass
+        #find the shortest time via available_station
+    #make new route which is the route from shortest_routes that has the shortest time plus the new station with route object updated accordingly
+    return new_route, new_station
 
 
-def get_list_of_stops(routes):
-    """
-    Returns an ordered list of stops from the routes.
-    """
-    stops = []
-    for route in routes:
-        for stop in route:
-            if stop not in stops:
-                stops.append(stop)
-    return sorted(stops)
 
 
-def construct_graph(routes, stops=None):
-    """
-    Construct a dictionary-based graph from a list of routes.
-    Each stop is a key, and its value is a list of stops it connects to.
-    Not allowing bidirectional travel.
-    """
-    if stops is None:
-        stops = get_list_of_stops(routes)
-
-    graph = {stop: [] for stop in stops}
-    for route in routes:
-        for i in range(len(route) - 1):
-            graph.setdefault(route[i], []).append(route[i + 1])
-
-    for stop in graph:
-        graph[stop] = list(sorted(set(graph[stop])))
-    return graph
-
-def find_time(node, start_node, node_distances, graph):
-    """
-    Function to find the time to reach a node from the start node, based on the current node distances and the graph structure.
-    """
-    pass
-
-def find_route(graph, start, destination):
-    """
-    Find a route from start to destination using the A* algorithm.
-    This function should return a list of nodes representing the path from start to destination.
-    (currently a placeholder for the actual implementation)
-    """
+def main(start_station,end_station,start_time):
     route_found = False
-    unvisited_nodes = []
-    node_distances = {}
-    node_distances["start"] = 0
-    for nodes in graph:
-        unvisited_nodes.append(nodes)
-    unvisited_nodes.remove(start)
+    routes = [init_routes(start_station)]
+    explored_stations = [start_station]
     while route_found == False:
-        graph_node = None
-        for x in unvisited_nodes:
-            if find_time(x,start,node_distances,graph) < smallest:
-                smallest = find_time(x,start,node_distances,graph)
-        if graph_node == destination:
-            route_found == True
-            return(node_distances)
-        else:
-            node_distances[graph_node] = "distance + route"
-    pass
+        new_route, new_station = astar_step(routes,explored_stations)
+        routes.append(new_route)
+        explored_stations.append(new_station)
+        #if new_route.completion_status = True:
+        #    print(new_route)
+        #    route_found == True
 
 
-def reconstruct_journey(route, graph):
-    """
-    Given a route (list of stops), reconstruct the journey with details of each leg.
-    Returns a list of tuples: (from_stop, to_stop, route, travel_time)
-    (currently a placeholder for the actual implementation)
-    """
-    pass
 
 
-def main():
-    trains = get_trains("Victoria Underground Station",datetime.now(timezone.utc),datetime.now(timezone.utc),30 )
-
-    for t in trains:
-        print(t.line)
-        print(t.direction)
-        print(t.stops)
-
-
-if __name__ == "__main__":
-    main()
+get_trains("Waterloo",datetime.now(timezone.utc),datetime.now(timezone.utc))
+#if __name__ == "__main__":
+    #main()
