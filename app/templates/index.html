@@ -11,7 +11,6 @@
 <link rel="stylesheet" href="css/map.css">
 <link rel="stylesheet" href="css/tabs.css">
 
-
 <!-- header-->
 
 <head style="font-family: Arial, Helvetica, sans-serif; background-color: #5C6BC0;">
@@ -29,7 +28,8 @@
 
 <!-- main body of the webpage-->
 <!-- linking to js file-->
- <script src="javascript/tabs.js"></script>
+<script src="javascript/tabs.js"></script>
+<script src="{{ url_for('static', filename='javascript/validation.js') }}" defer></script>
 
 <body style="font-family: Arial, Helvetica, sans-serif; background-color: #5C6BC0;">
 
@@ -55,7 +55,7 @@
                 <br>
 
                 <!-- input form-->
-                <form style="text-align: center;" action="{{url_for('route_input')}}" method="post" >
+                <form id="routeForm" style="text-align: center;" action="{{url_for('route_input')}}" method="post" >
                     <!-- Error message -->
                     <div id="error-message" class="error-message" role="alert">
                         <strong>Error!</strong>
