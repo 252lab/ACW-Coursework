@@ -6,7 +6,7 @@ from verifyInputs import *
 
 # used just for setting function up
 from flask import Flask, render_template, request, redirect, url_for
-app = Flask(__name__)
+app = Flask(__name__,template_folder="../templates")
 freezer = Freezer(app)
 
 BASE_URL = "https://api.tfl.gov.uk"
@@ -67,8 +67,8 @@ def route_input():
         # removing any extra spaces and changing them to lowecase, to make it 
         # easier to verify
         try:
-            startLocation = request.form.get("startLocation").strip()
-            endLocation = request.form.get("endLocation").strip()
+            startLocation = request.form.get("startLocation","").strip()
+            endLocation = request.form.get("endLocation","").strip()
 
             # default is an empty string if no input for the time
             startTime = request.form.get("startTime", "").strip()
@@ -79,7 +79,8 @@ def route_input():
 
             #TODO -> send to algorithm/proper backend here (Needs to handle time inputs there i think?)
             # send to route page
-            return redirect(url_for('route.html'))
+            #return redirect(url_for('route.html'))
+            render_template("route.html")
 
         except:
             #TODO - temporary error message -> need to output html/css/js pop up
