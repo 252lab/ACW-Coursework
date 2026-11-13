@@ -15,19 +15,19 @@ STATION_NAMES = {s["naptanID"]: s["commonName"] for s in NAPTAN}
 STATION_IDS = {s["commonName"].casefold(): s["naptanID"] for s in NAPTAN}
 
 
-class train:
+class Train:
     def __init__(self):
         self.line = ""
         self.direction = ""
         self.stops = []
 
 
-class station:
+class Station:
     def __init__(self):
         self.trains = []
 
 
-class route:
+class Route:
     def __init__(self, station, current_time):
         self.station = station
         self.current_time = current_time
