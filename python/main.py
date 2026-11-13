@@ -152,8 +152,8 @@ def get_trains(station, start_time, arrival_time, minutes=30):
         station_groups = get_station_order(timetable)
         for group in station_groups:
             stops = {}
-            for name, minutes in group:
-                stops[name] = round((arrival_time - start_time).total_seconds() / 60 + minutes)
+            for name, offset in group:
+                stops[name] = round((arrival_time - start_time).total_seconds() / 60 + offset)
             t.stops.append(stops)
         # Add live predictions for this vehicle only
         for p in vehicles.get(vehicle_id, []):
@@ -301,6 +301,5 @@ def main(start_station, end_station, start_time):
             route_found = True
 
 
-get_trains("Waterloo", datetime.now(timezone.utc), datetime.now(timezone.utc))
-# if __name__ == "__main__":
-# main()
+if __name__ == "__main__":
+    main()
