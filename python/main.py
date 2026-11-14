@@ -14,7 +14,7 @@ with (Path(__file__).with_name("naptan.json")).open(encoding="utf-8") as f:
 
 STATION_NAMES = {s["naptanID"]: s["commonName"] for s in NAPTAN}
 STATION_IDS = {s["commonName"].casefold(): s["naptanID"] for s in NAPTAN}
-
+STATION_OBJECTS = []
 
 class Train:
     def __init__(self):
@@ -24,9 +24,12 @@ class Train:
 
 
 class Station:
-    def __init__(self):
+    def __init__(self, naptan, name, lat, lon):
         self.trains = []
-
+        self.naptan = naptan
+        self.name = name
+        self.lat = lat
+        self.lon = lon
 
 class Route:
     def __init__(self, station, current_time):
@@ -52,6 +55,35 @@ def get_json(path):
     response = requests.get(f"{BASE_URL}{path}", timeout=10)
     response.raise_for_status()  # Raise an error for bad responses
     return response.json()
+
+
+def get_station_objects_from_csv():
+    # Load the CSV files from your extracted folder
+    stations_df = pd.read_csv("../tfl-stationdata-detailed/Stations.csv")
+    points_df = pd.read_csv("../tfl-stationdata-detailed/StationPoints.csv")
+
+    # Filter for Tube stations using the NaPTAN prefix '940GZZLU'
+    tube_stations = stations_df[stations_df["UniqueId"].str.startswith("940GZZLU", na=False)]
+
+    # Merge with StationPoints to grab coordinates (Lat/Lon)
+    merged_data = pd.merge(
+        tube_stations[["UniqueId", "Name"]],
+        points_df[["StationUniqueId", "Lat", "Lon"]],
+        left_on="UniqueId",
+        right_on="StationUniqueId",
+        how="inner"
+    ).drop_duplicates(subset=["UniqueId"]) # Keep one entry per station
+
+    # Instantiate the Station objects
+    for _, row in merged_data.iterrows():
+        station = Station(
+            naptan=row["UniqueId"],
+            name=row["Name"],
+            lat=row["Lat"],
+            lon=row["Lon"]
+        )
+    
+    STATION_OBJECTS.append(station)
 
 
 def get_station_id(station):
