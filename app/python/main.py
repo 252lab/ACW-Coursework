@@ -169,23 +169,21 @@ def find_station(stationName):
 
 # returning the list of stations
 def list_stations():
-
-    stations = []
-
+    
     # filepath for csv file
     filepath = "/tfl-stationdata-detailed/Stations.csv"
 
-    # reading from csv file
-    with open(filepath, "r") as f:
-        data = csv.reader(f)
+    # reading from the csv file
+    df = pd.read_csv(filepath)
 
-    # iterating through stations and sanitising names
-    for i in range(1, len(data)):
-        current_station = data[i][1].lower().replace(" ", "")
-        stations.append(current_station)
+    # getting the tube stations
+    tube_stations = df[df["UniqueId"].str.startswith("940GZZLU", na=False)]
+
+    # getting the station names
+    tube_names = sorted(tube_stations["Name"].dropna().unique().lower().replace(" ", ""))
 
     # returning list of stations
-    return stations
+    return tube_names
 
 
 
