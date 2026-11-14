@@ -59,7 +59,7 @@ def test_get_json_timeout(monkeypatch):
     with pytest.raises(requests.exceptions.RequestException):
         get_json("/Line/Mode/tube")
 
-# get_station_id tests
+# get_station_id tests -----------------------------------------------------------------------------------
 
 def test_get_station_id_short_and_full_name_match():
     full = get_station_id("Oxford Circus Underground Station")
@@ -73,6 +73,20 @@ def test_get_station_id_naptan_passthrough():
 def test_get_station_id_unknown():
     with pytest.raises(ValueError):
         get_station_id("Not A Real Station")
+
+# _get_routes_for_line_cached_tests
+
+@pytest.mark.integration
+def test_get_routes_for_line_cached_valid():
+    routes = _get_routes_for_line_cached("bakerloo", "inbound")
+    assert isinstance(routes, tuple)
+    assert routes
+    assert all(isinstance(route, tuple) and all(isinstance(stop, str) for stop in route) for route in routes)
+
+@pytest.mark.integration
+def test_get_routes_for_line_cached_invalid():
+    with pytest.raises(requests.exceptions.RequestException):
+        _get_routes_for_line_cached("not-a-real-line", "inbound")
 
 # create mock data for small-scale end-to-end tests
 
