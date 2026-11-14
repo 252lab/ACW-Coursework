@@ -3,6 +3,7 @@ import pandas as pd
 import flask
 from flask_frozen import Freezer
 import datetime
+import csv
 
 # used just for setting function up
 from flask import Flask, render_template, request, redirect, url_for
@@ -147,7 +148,7 @@ def find_station(stationName):
     toMatch = stationName.lower().replace(" ", "")
     foundMatches = []
 
-    # getting array of stationsd
+    # getting array of stations
     listStations = list_stations()
 
 
@@ -166,9 +167,27 @@ def find_station(stationName):
     # compare station common name to entered name
     # if entered name in station name (and there is only one), return station id
 
+# returning the list of stations
 def list_stations():
-    #retriving array of stop points and ids
-    return []
+
+    stations = []
+
+    # filepath for csv file
+    filepath = "/tfl-stationdata-detailed/Stations.csv"
+
+    # reading from csv file
+    with open(filepath, "r") as f:
+        data = csv.reader(f)
+
+    # iterating through stations and sanitising names
+    for i in range(1, len(data)):
+        current_station = data[i][1].lower().replace(" ", "")
+        stations.append(current_station)
+
+    # returning list of stations
+    return stations
+
+
 
 if __name__ == "__main__":
     freezer.freeze()
