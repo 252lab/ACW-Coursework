@@ -88,7 +88,13 @@ def test_get_routes_for_line_cached_invalid():
     with pytest.raises(requests.exceptions.RequestException):
         _get_routes_for_line_cached("not-a-real-line", "inbound")
 
-# create mock data for small-scale end-to-end tests
+# --------------------------------------------------------------------------------------------------------------------------------------------------
+
+# MOCK DATA FOR OFFLINE ROUTE-FINDING TESTS
+
+# In this mock data:
+# "stops" map each reachable station to the minutes it takes to get there after boarding.
+# trains are available immediately whenever you arrive, so the only waiting time is the change time
 
 MOCK_JOURNEYS = {
     "direct": {
