@@ -26,6 +26,6 @@ form.addEventListener("submit", function (event) {
 });
 
 // function to switch from the index page to the route page
-function switchPage(){
-    window.location.href = "route.html";
-}
+//function switchPage(){
+//    window.location.href = "route.html";
+//}

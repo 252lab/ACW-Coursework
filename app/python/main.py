@@ -146,20 +146,10 @@ def find_station(stationName):
     # converting the station name to lower case and removing any extra paces
     toMatch = stationName.lower().replace(" ", "")
     foundMatches = []
+
+    # getting array of stationsd
     listStations = list_stations()
 
-    # retriving list of station names and IDs to check
-
-    try:
-        pass
-    except:
-        pass
-
-    # searching array of Ids
-    try:
-        pass
-    except:
-        pass
 
 
     if (len(foundMatches) == 1):
