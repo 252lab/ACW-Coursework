@@ -5,8 +5,11 @@ import requests
 
 from python.main import (
     Train,
+    _get_routes_for_line_cached,
+    astar_step,
     get_json,
-    route_stations,
+    get_station_id,
+    init_route,
     main
 )
 
@@ -56,6 +59,20 @@ def test_get_json_timeout(monkeypatch):
     with pytest.raises(requests.exceptions.RequestException):
         get_json("/Line/Mode/tube")
 
+# get_station_id tests
+
+def test_get_station_id_short_and_full_name_match():
+    full = get_station_id("Oxford Circus Underground Station")
+    assert get_station_id("Oxford Circus") == full
+    assert get_station_id("oxford circus") == full
+
+
+def test_get_station_id_naptan_passthrough():
+    assert get_station_id("940gzzluoxc") == "940GZZLUOXC"
+
+def test_get_station_id_unknown():
+    with pytest.raises(ValueError):
+        get_station_id("Not A Real Station")
 
 # create mock data for small-scale end-to-end tests
 
