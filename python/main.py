@@ -2,13 +2,14 @@ import json
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
+from pathlib import Path
 
 import requests
 
 BASE_URL = "https://api.tfl.gov.uk"
 
 """Opening the NAPTAN json to avoid constantly reopening it"""
-with open("naptan.json") as f:
+with (Path(__file__).with_name("naptan.json")).open(encoding="utf-8") as f:
     NAPTAN = json.load(f)
 
 STATION_NAMES = {s["naptanID"]: s["commonName"] for s in NAPTAN}
