@@ -259,5 +259,3 @@ def test_valid_end_station_with_whitespace(homepage: Homepage) -> None:
     homepage.submit_button.click()
     # there should be no error message displayed for a valid end station
     expect(homepage.error_message).to_be_hidden()
-
-# test that the user's station inputs are valid stations on the London Underground network
