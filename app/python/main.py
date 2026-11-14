@@ -151,6 +151,12 @@ def find_station(stationName):
     # getting array of stations
     listStations = list_stations()
 
+    #TODO - Binary search
+    try:
+        pass
+    except:
+        pass
+
 
 
     if (len(foundMatches) == 1):
@@ -184,7 +190,6 @@ def list_stations():
 
     # returning list of stations
     return tube_names
-
 
 
 if __name__ == "__main__":
