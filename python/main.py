@@ -355,4 +355,4 @@ def main(start_station, end_station, start_time):
 
 
 if __name__ == "__main__":
-    main()
+    main("Baker Street", "Bank", datetime(2026, 1, 1, 8, 0, tzinfo=timezone.utc))
