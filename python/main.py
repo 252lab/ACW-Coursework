@@ -2,7 +2,7 @@ import json
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
-
+from geopy.distance import geodesic
 import requests
 
 BASE_URL = "https://api.tfl.gov.uk"
@@ -14,6 +14,7 @@ with open("naptan.json") as f:
 STATION_NAMES = {s["naptanID"]: s["commonName"] for s in NAPTAN}
 STATION_IDS = {s["commonName"].casefold(): s["naptanID"] for s in NAPTAN}
 STATION_OBJECTS = []
+EST_MAX_TRAIN_SPEED = 60 # tfl says that trains can reach about 60 mph
 
 class Train:
     def __init__(self):
@@ -29,6 +30,16 @@ class Station:
         self.name = name
         self.lat = lat
         self.lon = lon
+    
+    def get_lat(self):
+        return self.lat
+
+    def get_lon(self):
+        return self.lon
+
+    def __repr__(self):
+        return f"Station(naptan='{self.naptan}', name='{self.name}', lat={self.lat}, lon={self.lon})"
+
 
 class Route:
     def __init__(self, station, current_time):
@@ -220,6 +231,15 @@ def heuristic(last_station, new_station, heuristic_type="dijkstra"):  # ADD ACTU
     if heuristic_type == "dijkstra":
         return 0
     else:
+        # Get lats and lons between stations
+        ls_lat_lon = (last_station.get_lat(), last_station1.get_lon())
+        ns_lat_lon = (new_station.get_lat(), new_station.get_lon())
+
+        # Find the Eueclidian distance
+        dist_miles = geodesic(ls_lat_lon, ns_lat_lon).miles
+
+        # Find the hueristic, distance divided by estimate max possible speed of train
+        hueristic = dist_miles / EST_MAX_SPEED
         return 0
 
 
