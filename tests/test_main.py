@@ -4,16 +4,10 @@ import pytest
 import requests
 
 from python.main import (
-    Route,
     Train,
-    access_stop_point,
-    astar_step,
     get_json,
-    get_list_of_lines,
-    get_list_of_stops,
-    get_routes_for_line,
-    get_stop_point,
-    get_tube_routes,
+    route_stations,
+    main
 )
 
 # Types of tests:
@@ -103,15 +97,41 @@ MOCK_JOURNEYS = {
 }
 
 
+START_TIME = datetime(2026, 1, 1, 8, 0, tzinfo=timezone.utc)
+
+
+def make_fake_get_trains(trains_by_station):
+    """Build a stand-in for get_trains that uses the mock graph instead of the TfL API."""
+ 
+    def fake_get_trains(station, start_time, arrival_time, minutes=30):
+        boarding_minutes = round((arrival_time - start_time).total_seconds() / 60)
+        trains = []
+        for spec in trains_by_station.get(station, []):
+            train = Train()
+            train.line = spec["line"]
+            train.stops = [{name: boarding_minutes + ride for name, ride in spec["stops"].items()}]
+            trains.append(train)
+        return trains
+ 
+    return fake_get_trains
+
+
 @pytest.mark.endtoend
-def test_one_valid_direct_route():
+@pytest.mark.parametrize("name", MOCK_JOURNEYS)
+def test_journeys(name, monkeypatch):
     """
-    Test a journey with one valid direct route.
-    Uses sample data on a small graph that can be checked by hand.
+    Small graphs that can be checked by hand: each journey lists its expected time and stations.
     """
-    python.main(MOCK_JOURNEYS["direct"]["start"], MOCK_JOURNEYS["direct"]["destination"], MOCK_JOURNEYS["direct"]["trains"])
-    
-    
+    journey = MOCK_JOURNEYS[name]
+    monkeypatch.setattr("python.main.get_trains", make_fake_get_trains(journey["trains"]))
+
+    route = main(journey["start"], journey["destination"], START_TIME)
+
+    assert route is not None
+    assert route.route_complete
+    assert route.current_time == 12
+    assert route_stations(route) == ["Start", "End"]
+    assert [train.line for train in route.trains] == ["Red"]
 
 
 @pytest.mark.endtoend
