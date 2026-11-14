@@ -1,5 +1,6 @@
 requests==2.32.3
 pytest==8.3.3
+geopy==2.5.0
 
 # linting
 ruff==0.8.3
