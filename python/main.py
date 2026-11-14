@@ -101,10 +101,12 @@ def get_station_id(station):
     # Allow NAPTAN IDs directly
     if station.upper().startswith("9"):
         return station.upper()
-    # Use the station lookup loaded at startup instead of rereading the file.
-    station_id = STATION_IDS.get((station + " Underground Station").casefold())
-    if station_id:
-        return station_id
+    # Accept a full common name ("Oxford Circus Underground Station") or a short one ("Oxford Circus").
+    # Add " Underground Station" if a short name is provided.
+    for name in (station, station + " Underground Station"):
+        station_id = STATION_IDS.get(name.casefold())
+        if station_id:
+            return station_id
     raise ValueError(f"Station not found: {station}")
 
 
