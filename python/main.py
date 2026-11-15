@@ -22,25 +22,6 @@ class Train:
         self.direction = ""
         self.stops = []
 
-
-class Station:
-    def __init__(self, naptan, name, lat, lon):
-        self.trains = []
-        self.naptan = naptan
-        self.name = name
-        self.lat = lat
-        self.lon = lon
-    
-    def get_lat(self):
-        return self.lat
-
-    def get_lon(self):
-        return self.lon
-
-    def __repr__(self):
-        return f"Station(naptan='{self.naptan}', name='{self.name}', lat={self.lat}, lon={self.lon})"
-
-
 class Route:
     def __init__(self, station, current_time):
         self.station = station
@@ -67,8 +48,10 @@ def get_json(path):
     return response.json()
 
 """ Fetches the stations long and lats from a csv file
-    Converts fetches the values from that file and returns
-    a dictionary of stations and their lons and lats"""
+    Converts fetched values from file and returns
+    a dictionary of station NapTans and their lons and lats
+    {String: (float,float)}
+    """
 def get_stations_lon_lat_dictionary(station_coord_csv=r"../tfl-stationdata-detailed/StationPoints.csv"):
     # load the csv file
     points = pd.read_csv(station_coord_csv)
@@ -221,21 +204,20 @@ def _get_routes_for_line_cached(line_id: str, direction: str) -> tuple[tuple[str
     ordered_line_routes = response.get("orderedLineRoutes", [])
     return tuple(tuple(route.get("naptanIds", [])) for route in ordered_line_routes)
 
-
+""" Hueristic calculated assuming input is two tuples of lat and lons
+    starting station (lat,lon)
+    ending station (lat, lon)
+    """
 def heuristic(last_station, new_station, heuristic_type="dijkstra"):  # ADD ACTUAL HEURISTIC HERE
     if heuristic_type == "dijkstra":
         return 0
     else:
-        # Get lats and lons between stations
-        ls_lat_lon = (last_station.get_lat(), last_station1.get_lon())
-        ns_lat_lon = (new_station.get_lat(), new_station.get_lon())
-
         # Find the Eueclidian distance
-        dist_miles = geodesic(ls_lat_lon, ns_lat_lon).miles
+        dist_miles = geodesic(last_station, new_station).miles
 
         # Find the hueristic, distance divided by estimate max possible speed of train
-        hueristic = dist_miles / EST_MAX_SPEED
-        return 0
+        hueristic = dist_miles / EST_MAX_TRAIN_SPEED
+        return hueristic
 
 
 def init_route(start_station):
