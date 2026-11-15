@@ -14,7 +14,6 @@ with (Path(__file__).with_name("naptan.json")).open(encoding="utf-8") as f:
 
 STATION_NAMES = {s["naptanID"]: s["commonName"] for s in NAPTAN}
 STATION_IDS = {s["commonName"].casefold(): s["naptanID"] for s in NAPTAN}
-STATION_OBJECTS = []
 EST_MAX_TRAIN_SPEED = 60 # tfl says that trains can reach about 60 mph
 
 class Train:
@@ -67,35 +66,28 @@ def get_json(path):
     response.raise_for_status()  # Raise an error for bad responses
     return response.json()
 
+""" Fetches the stations long and lats from a csv file
+    Converts fetches the values from that file and returns
+    a dictionary of stations and their lons and lats"""
+def get_stations_lon_lat_dictionary(station_coord_csv=r"../tfl-stationdata-detailed/StationPoints.csv"):
+    # load the csv file
+    points = pd.read_csv(station_coord_csv)
 
-def get_station_objects_from_csv():
-    # Load the CSV files from your extracted folder
-    stations_df = pd.read_csv("../tfl-stationdata-detailed/Stations.csv")
-    points_df = pd.read_csv("../tfl-stationdata-detailed/StationPoints.csv")
+    # filter for tube stations using NapTan
+    tube_points = points[points["StationUniqueId"].str.startswith("940GZZLU", na=False)]
 
-    # Filter for Tube stations using the NaPTAN prefix '940GZZLU'
-    tube_stations = stations_df[stations_df["UniqueId"].str.startswith("940GZZLU", na=False)]
+    # remove duplicates
+    unique_points = tube_points.drop_duplicates(subset=["StationUniqueId"])
 
-    # Merge with StationPoints to grab coordinates (Lat/Lon)
-    merged_data = pd.merge(
-        tube_stations[["UniqueId", "Name"]],
-        points_df[["StationUniqueId", "Lat", "Lon"]],
-        left_on="UniqueId",
-        right_on="StationUniqueId",
-        how="inner"
-    ).drop_duplicates(subset=["UniqueId"]) # Keep one entry per station
+    # convert to dictionary
+    coord_dict = {}
+    for _, row in unique_points.iterrows():
+        naptan = row["StationUniqueId"]
+        lat = row["Lat"]
+        lon = row["Lon"]
+        coord_dict[naptan] = (lat,lon)
 
-    # Instantiate the Station objects
-    for _, row in merged_data.iterrows():
-        station = Station(
-            naptan=row["UniqueId"],
-            name=row["Name"],
-            lat=row["Lat"],
-            lon=row["Lon"]
-        )
-    
-    STATION_OBJECTS.append(station)
-
+    return coord_dict
 
 def get_station_id(station):
     # Allow NAPTAN IDs directly
