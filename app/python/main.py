@@ -1,10 +1,10 @@
 import requests
 import pandas as pd
-import numpy as np
+import numpy
 import flask
 from flask_frozen import Freezer
 import datetime
-import csv
+from flask import Flask, redirect, url_for, render_template
 
 # used just for setting function up
 from flask import Flask, render_template, request, redirect, url_for
@@ -13,9 +13,32 @@ freezer = Freezer(app)
 
 BASE_URL = "https://api.tfl.gov.uk"
 
+# rendering the starting page
 @app.route("/")
 def index():
     return render_template("index.html")
+
+# rendering the loading page
+@app.route("/loading")
+def loading():
+    return render_template("loading.html")
+
+# rendering the route page
+@app.route("/route")
+def route():
+    return render_template("route.html")
+
+#switching to index page
+def to_index():
+    return redirect(url_for('index.html'))
+
+# switching to loading page
+def to_loading():
+    return redirect(url_for('loading.html'))
+
+# switching to route page
+def to_route():
+    return redirect(url_for('route.html'))
 
 
 def get_json(path):
@@ -54,7 +77,8 @@ inputs. If the inputs are valid, they will then be sent to the algorithm.
 @app.route("/route_input", methods=["GET", "POST"])
 def route_input():
 
-    #TODO: Call loading page here!!!
+    # switching to loading page while back end is running
+    to_loading()
 
     # initialising input variables
     startLocation = ""
@@ -88,7 +112,7 @@ def route_input():
             #TODO - temporary error message -> need to output html/css/js pop up
             #Send back to index page
             print("Form elements cannot be retrieved")
-            return render_template('index.html')
+            to_index()
 
 # function used to check if stations can be matched to API - TODO
 # also checks that the user has only entered one of the start and end time
@@ -207,6 +231,12 @@ def list_stations():
 
     # returning list of stations
     return tube_names
+
+def error_found(message):
+    pass
+# use flask flash funtion
+# return html code with error message 
+# switch back to index page
 
 if __name__ == "__main__":
     freezer.freeze()
