@@ -45,7 +45,7 @@ def main():
         return
     print(stop.keys())
 
-#TODO
+
 """ 
 This subroutine is used to retrieve the form inputs from the index.html page, and verify that they are valid.
 If they inputs are not valid, an error message will be displayed and the user will be promted to re-enter their
@@ -211,5 +211,3 @@ def list_stations():
 if __name__ == "__main__":
     freezer.freeze()
 
-# need array of tube names and corresponding ids
-# iterate through array to sanitise names?
