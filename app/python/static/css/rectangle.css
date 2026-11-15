@@ -11,9 +11,11 @@
     padding-right: 5%;
     flex-direction: column;
 
-    /* centering the rectangle on mobile views */
-    @media (max-width: 950px) {
+}
+
+/* centering the rectangle on mobile views */
+@media (max-width: 950px) {
+    .rectangle {
         margin: 0 auto;
     }
-
 }
