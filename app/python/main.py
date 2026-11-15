@@ -146,16 +146,29 @@ def find_station(stationName):
 
     # converting the station name to lower case and removing any extra paces
     toMatch = stationName.lower().replace(" ", "")
-    foundMatches = []
+    found = False
 
     # getting array of stations
     listStations = list_stations()
 
-    #TODO - Binary search
+    #using a searching to check in the station names match up
     try:
-        pass
+        start = 0
+        end = len(listStations) -1
+
+        while start <= end:
+            mid = (start+end) // 2
+            midpoint = listStations[mid]
+
+            if midpoint > toMatch:
+                end = mid -1
+
+            elif midpoint < toMatch:
+                start = mid + 1
+            else:
+                found = True
     except:
-        pass
+        print("Something went wrong")
 
 
 
