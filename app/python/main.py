@@ -29,15 +29,15 @@ def route():
 
 #switching to index page
 def to_index():
-    return redirect(url_for('index.html'))
+    return redirect(url_for('index'))
 
 # switching to loading page
 def to_loading():
-    return redirect(url_for('loading.html'))
+    return redirect(url_for('loading'))
 
 # switching to route page
 def to_route():
-    return redirect(url_for('route.html'))
+    return redirect(url_for('route'))
 
 
 def get_json(path):
@@ -126,7 +126,7 @@ def validate_inputs(startLocation, endLocation, startTime, endTime):
     #validating station names
     try:
         # check if start station and end station can be found in the API/data
-        if (startLocation == endLocation):
+        if (startLocation.strip().lower() == endLocation.strip().lower()):
 
             # the inputs are invalid
             # output an error message about this
@@ -169,7 +169,7 @@ def validate_inputs(startLocation, endLocation, startTime, endTime):
 
         # if no time is entered, get the current time as the start time
         elif (startTime == "" and endTime == ""):
-            startTime = datetime.now()
+            startTime = datetime.datetime.now()
             
     except:
         # inputs must be invalid
@@ -231,7 +231,7 @@ def find_station(stationName):
 def list_stations():
     
     # filepath for csv file
-    filepath = "/tfl-stationdata-detailed/Stations.csv"
+    filepath = "tfl-stationdata-detailed/Stations.csv"
 
     try:
 
@@ -248,8 +248,9 @@ def list_stations():
         # making the staion names lowercase and removing any spaces
         # for easier searching
         for i in range(0, len(tube_names)):
-            tube_names[i][0].lower().replace(" ", "")
+            tube_names[i][0]= tube_names[i][0].lower().replace(" ", "")
 
+        print(len(tube_names))
         # returning list of stations
         return tube_names
 
