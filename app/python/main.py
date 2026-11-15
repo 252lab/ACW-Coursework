@@ -1,5 +1,6 @@
 import requests
 import pandas as pd
+import numpy as np
 import flask
 from flask_frozen import Freezer
 import datetime
@@ -114,6 +115,11 @@ def validate_inputs(startLocation, endLocation, startTime, endTime):
             startID = find_station(startLocation)
             endID = find_station(endLocation)
 
+            if (startID == -1 or endID == -1):
+                validInputs = False
+                #TODO - ERROR MESSAGE
+                print("One or both of your stations could not be found")
+
     except:
         #TODO -> update with proper error message later
         print("Your entered stations could not be found.")
@@ -139,6 +145,9 @@ def validate_inputs(startLocation, endLocation, startTime, endTime):
     if validInputs:
         # returning the validated inputs
         return startID, endID, startTime, endTime
+    else:
+        pass 
+        #TODO - ERROR MESSAGE
 
 #checking if the station is valid
 # return station ID if found
@@ -151,14 +160,14 @@ def find_station(stationName):
     # getting array of stations
     listStations = list_stations()
 
-    #using a searching to check in the station names match up
+    # searching the array of stations fopr a match
     try:
         start = 0
         end = len(listStations) -1
 
         while start <= end:
             mid = (start+end) // 2
-            midpoint = listStations[mid]
+            midpoint = listStations[mid][0]
 
             if midpoint > toMatch:
                 end = mid -1
@@ -166,25 +175,14 @@ def find_station(stationName):
             elif midpoint < toMatch:
                 start = mid + 1
             else:
-                found = True
+                #return the Id of the station
+                return listStations[mid][1]
+
+        # return -1 if the station could not be found
+        return -1
+    
     except:
         print("Something went wrong")
-
-
-
-    if (len(foundMatches) == 1):
-        return foundMatches[0]
-    
-    elif (len(foundMatches) > 1):
-        pass
-        # need to handle two stations having similar names
-        # return the shorter one
-
-    # find a specific stop based on its name
-    # and return its ID
-
-    # compare station common name to entered name
-    # if entered name in station name (and there is only one), return station id
 
 # returning the list of stations
 def list_stations():
@@ -198,12 +196,20 @@ def list_stations():
     # getting the tube stations
     tube_stations = df[df["UniqueId"].str.startswith("940GZZLU", na=False)]
 
-    # getting the station names
-    tube_names = sorted(tube_stations["Name"].dropna().unique().lower().replace(" ", ""))
+    # converting to an array
+    # data should already be ordered as it is in the csv file
+    tube_names = tube_stations[["Name", "UniqueId"]].to_numpy()
+
+    # making the staion names lowercase and removing any spaces
+    # for easier searching
+    for i in range(0, len(tube_names)):
+        tube_names[i][0].lower().replace(" ", "")
 
     # returning list of stations
     return tube_names
 
-
 if __name__ == "__main__":
     freezer.freeze()
+
+# need array of tube names and corresponding ids
+# iterate through array to sanitise names?
