@@ -5,11 +5,11 @@
 <meta charset="UTF-8">
 
 <!-- importing css pages-->
-<link rel="stylesheet" href="css/footer.css">
-<link rel="stylesheet" href="css/columns.css">
-<link rel="stylesheet" href="css/padding.css">
-<link rel="stylesheet" href="css/rectangle.css">
-<link rel="stylesheet" href="css/map.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/columns.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/padding.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/rectangle.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/map.css') }}">
 
 
 <!-- header-->
@@ -36,7 +36,7 @@
     <hr class="solid" style="color: white;">
     <br>
 
-    <div class="padding" class="row">
+    <div class="padding row">
         <div class="column">
 
             <div class="rectangle" style="text-align: center;">
