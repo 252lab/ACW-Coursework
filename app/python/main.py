@@ -6,7 +6,7 @@ from flask_frozen import Freezer
 import datetime
 
 # used just for setting function up
-from flask import Flask, render_template, request, redirect, url_for
+from flask import *
 app = Flask(__name__,template_folder="../templates")
 freezer = Freezer(app)
 
@@ -108,10 +108,9 @@ def route_input():
             render_template("route.html")
 
         except:
-            #TODO - temporary error message -> need to output html/css/js pop up
-            #Send back to index page
-            print("Form elements cannot be retrieved")
-            to_index()
+             message = "Form elements cannot be retrieved."
+             error_found(message)
+
 
 # function used to check if stations can be matched to API - TODO
 # also checks that the user has only entered one of the start and end time
@@ -127,50 +126,67 @@ def validate_inputs(startLocation, endLocation, startTime, endTime):
     #validating station names
     try:
         # check if start station and end station can be found in the API/data
-        #TODO -> implement searching algorithm (either sort the data and use binary search, or use Boyer Moore Algorithm for Pattern Searching)
-
         if (startLocation == endLocation):
-            #TODO -> update error message
-            print("Please enter two different stations.")
+
+            # the inputs are invalid
+            # output an error message about this
             validInputs = False
+            message = "Please enter two different stations."
+            error_found(message)
+
         else:
 
+            # otherwise try and find station data
             startID = find_station(startLocation)
             endID = find_station(endLocation)
 
+            #if either id is -1, it cannot be found
             if (startID == -1 or endID == -1):
+
+                # therefore the input must be invalid
                 validInputs = False
-                #TODO - ERROR MESSAGE
-                print("One or both of your stations could not be found")
+
+                # output the error message
+                message = "One or both of your stations could not be found."
+                error_found(message)
 
     except:
-        #TODO -> update with proper error message later
-        print("Your entered stations could not be found.")
+        # if exception is raised, assume something is wrong with inputs
         validInputs = False
+        message = "Couldn't validate station inputs."
+        error_found(message)
     
     # validating time inputs
     try:
         # if both times are entered, output an error message
         if (startTime != "" and endTime != ""):
-            #TODO - change to proper error message
-            print("Please only enter one time.")
+            # inputs are invalid
             validInputs = False
+
+            # outputting error message
+            message = "Please only enter either the start time or end time."
+            error_found(message)
 
         # if no time is entered, get the current time as the start time
         elif (startTime == "" and endTime == ""):
             startTime = datetime.now()
+            
     except:
-        #TODO - Change error message later
-        print("Couldn't validate time inputs.")
+        # inputs must be invalid
         validInputs = False
+
+        # outputting error
+        message = "Couldn't validate time inputs."
+        error_found(message)
 
     # if all the inputs thaty have been entered are valid
     if validInputs:
         # returning the validated inputs
         return startID, endID, startTime, endTime
     else:
-        pass 
-        #TODO - ERROR MESSAGE
+        # catch the error
+        message = "Something went wrong."
+        error_found(message)
 
 #checking if the station is valid
 # return station ID if found
@@ -180,11 +196,14 @@ def find_station(stationName):
     toMatch = stationName.lower().replace(" ", "")
     found = False
 
-    # getting array of stations
-    listStations = list_stations()
 
     # searching the array of stations fopr a match
     try:
+
+        # getting array of stations
+        listStations = list_stations()
+
+        # searching the array of stations for a match
         start = 0
         end = len(listStations) -1
 
@@ -205,7 +224,8 @@ def find_station(stationName):
         return -1
     
     except:
-        print("Something went wrong")
+        message = "Something went wrong."
+        error_found(message)
 
 # returning the list of stations
 def list_stations():
@@ -213,30 +233,37 @@ def list_stations():
     # filepath for csv file
     filepath = "/tfl-stationdata-detailed/Stations.csv"
 
-    # reading from the csv file
-    df = pd.read_csv(filepath)
+    try:
 
-    # getting the tube stations
-    tube_stations = df[df["UniqueId"].str.startswith("940GZZLU", na=False)]
+        # reading from the csv file
+        df = pd.read_csv(filepath)
 
-    # converting to an array
-    # data should already be ordered as it is in the csv file
-    tube_names = tube_stations[["Name", "UniqueId"]].to_numpy()
+        # getting the tube stations
+        tube_stations = df[df["UniqueId"].str.startswith("940GZZLU", na=False)]
 
-    # making the staion names lowercase and removing any spaces
-    # for easier searching
-    for i in range(0, len(tube_names)):
-        tube_names[i][0].lower().replace(" ", "")
+        # converting to an array
+        # data should already be ordered as it is in the csv file
+        tube_names = tube_stations[["Name", "UniqueId"]].to_numpy()
 
-    # returning list of stations
-    return tube_names
+        # making the staion names lowercase and removing any spaces
+        # for easier searching
+        for i in range(0, len(tube_names)):
+            tube_names[i][0].lower().replace(" ", "")
 
-#TODO - Error message function
+        # returning list of stations
+        return tube_names
+
+    except:
+        message = "Couldn't retrive list of stations in network."
+        error_found(message)
+
+
+# outputs the error message
+# and returns to the index page
 def error_found(message):
-    pass
-# use flask flash funtion
-# return html code with error message 
-# switch back to index page
+    flash(message, 'error')
+    to_index()
+
 
 if __name__ == "__main__":
     freezer.freeze()
