@@ -4,7 +4,6 @@ import numpy
 import flask
 from flask_frozen import Freezer
 import datetime
-from flask import Flask, redirect, url_for, render_template
 
 # used just for setting function up
 from flask import Flask, render_template, request, redirect, url_for
@@ -232,6 +231,7 @@ def list_stations():
     # returning list of stations
     return tube_names
 
+#TODO - Error message function
 def error_found(message):
     pass
 # use flask flash funtion
