@@ -8,6 +8,9 @@ LOADING_URL = (
 ).as_uri()
 
 class LoadingPage:
+    '''
+    This class creates a representation of the Loading page, so that the tests use the Page Object Model.
+    '''
     def __init(self, page: Page) -> None:
         self.page = page
         self.loader = page.locator(".loader")
