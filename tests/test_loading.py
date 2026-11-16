@@ -11,7 +11,7 @@ class LoadingPage:
     '''
     This class creates a representation of the Loading page, so that the tests use the Page Object Model.
     '''
-    def __init(self, page: Page) -> None:
+    def __init__(self, page: Page) -> None:
         self.page = page
         self.loader = page.locator(".loader")
         self.footer = page.locator("footer")
@@ -20,14 +20,16 @@ class LoadingPage:
         self.page.goto(LOADING_URL)
 
 @pytest.fixture
-def loading_page():
+def loading_page(request):
     playwright = sync_playwright().start()
+    request.addfinalizer(playwright.stop)
+
     browser = playwright.chromium.launch()
+    request.addfinalizer(browser.close)
+
     page = LoadingPage(browser.new_page())
     page.open()
-    yield page
-    browser.close()
-    playwright.stop()
+    return page
 
 @pytest.mark.smoke
 def test_loading_page_loads(loading_page: LoadingPage) -> None:
