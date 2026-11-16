@@ -265,6 +265,8 @@ def error_found(message):
     flash(message, 'error')
     to_index()
 
+def show_route(text):
+    pass
 
 if __name__ == "__main__":
     freezer.freeze()
