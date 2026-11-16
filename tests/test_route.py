@@ -20,6 +20,16 @@ class RoutePage:
     def open(self) -> None:
         self.page.goto(ROUTE_URL)
 
+@pytest.fixture
+def route_page():
+    playwright = sync_playwright().start()
+    browser = playwright.chromium.launch()
+    page = RoutePage(browser.new_page())
+    page.open()
+    yield page
+    browser.close()
+    playwright.stop()
+
 @pytest.mark.smoke
 def test_route_page_heading_is_visible(route_page: RoutePage) -> None:
     expect(route_page.heading).to_have_text("Your Route")
