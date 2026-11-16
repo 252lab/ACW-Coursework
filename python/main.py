@@ -29,6 +29,7 @@ class Route:
         self.current_time = current_time
 
         self.current_trains = []
+        self.trains = []
         self.available_stations = {}
 
         self.parent = None
@@ -37,6 +38,16 @@ class Route:
         self.f_score = 0
 
         self.route_complete = False
+
+
+def route_stations(route):
+    """Return the ordered station path by walking back through parent routes."""
+    stations = []
+    current = route
+    while current is not None:
+        stations.append(current.station)
+        current = current.parent
+    return list(reversed(stations))
 
 
 def get_json(path):
