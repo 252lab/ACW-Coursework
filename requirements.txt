@@ -2,3 +2,5 @@ requests==2.32.3
 pandas==2.2.3
 pytest==7.4.2
 playwright==1.44.0
+Flask==3.0.3
+geopy==2.4.1
