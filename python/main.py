@@ -246,11 +246,24 @@ def heuristic(last_station, new_station, heuristic_type="dijkstra"):  # ADD ACTU
         return 0
 
 
-def init_route(start_station):
-    # edit this so that it does two things:
-    # 1. creates the starting route with the start station and time 0
-    # 2. gets the available stations from the start station and adds them to the route
+def init_route(start_station, start_time):
+    """Create the initial route and populate it with departures from its start station."""
     initial_route = Route(start_station, 0)
+    trains = get_trains(start_station, start_time, start_time)
+
+    for train in trains:
+        for stop_group in train.stops:
+            for station_name, arrival_time in stop_group.items():
+                if arrival_time <= initial_route.current_time:
+                    continue
+
+                current = initial_route.available_stations.get(station_name)
+                if current is None or arrival_time < current["time"]:
+                    initial_route.available_stations[station_name] = {
+                        "time": arrival_time,
+                        "train": train,
+                    }
+
     return initial_route
 
 
@@ -348,7 +361,7 @@ def astar_step(explored_routes, explored_stations, start_time, heuristic_type="d
 
 def main(start_station, end_station, start_time):
     route_found = False
-    routes = [init_route(start_station)]
+    routes = [init_route(start_station, start_time)]
     explored_stations = [start_station]
     while not route_found:
         next_route, next_station = astar_step(routes, explored_stations, start_time)
