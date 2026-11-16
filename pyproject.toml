@@ -24,4 +24,5 @@ markers = [
 	"integration: tests that call the live TfL API and require network access",
 	"endtoend: full journey tests that simulate a user flow through the system",
 	"mock: tests that use mocked responses and do not require network access",
+	"smoke: quick tests that validate that the page loads correctly",
 ]
