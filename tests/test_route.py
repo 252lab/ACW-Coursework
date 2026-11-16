@@ -19,3 +19,11 @@ class RoutePage:
 
     def open(self) -> None:
         self.page.goto(ROUTE_URL)
+
+@pytest.mark.smoke
+def test_route_page_heading_is_visible(route_page: RoutePage) -> None:
+    expect(route_page.heading).to_have_text("Your Route")
+
+@pytest.mark.smoke
+def test_route_page_has_route_text(route_page: RoutePage) -> None:
+    expect(route_page.page.get_by_text("Your most optimal route is:")).to_be_visible()
