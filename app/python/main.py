@@ -266,9 +266,10 @@ def error_found(message):
 # displaying the outputted route
 def show_route(text):
 
+    # initial route string
+    route_output = ""
+
     try:
-        # initial route string
-        route_output = ""
 
         #TODO - set up route output
 
