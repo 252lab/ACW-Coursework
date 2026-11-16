@@ -28,3 +28,8 @@ def loading_page():
     yield page
     browser.close()
     playwright.stop()
+
+@pytest.mark.smoke
+def test_loading_page_loads(loading_page: LoadingPage) -> None:
+    expect(loading_page.loader).to_be_visible()
+    expect(loading_page.footer).to_be_visible()
