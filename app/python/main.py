@@ -1,12 +1,13 @@
+
+# imports 
 import requests
 import pandas as pd
 import numpy
 import flask
 from flask_frozen import Freezer
 import datetime
+from flask import Flask, render_template, request, Markup, redirect, url_for, flash
 
-# used just for setting function up
-from flask import *
 app = Flask(__name__,template_folder="../templates")
 freezer = Freezer(app)
 
@@ -102,10 +103,7 @@ def route_input():
             # call function to validate inputs (and update then when necessary)
             startLocation, endLocation, startTime, endTime = validate_inputs(startLocation, endLocation, startTime, endTime)
 
-            #TODO -> send to algorithm/proper backend here (Needs to handle time inputs there i think?)
-            # send to route page
-            #return redirect(url_for('route.html'))
-            render_template("route.html")
+            #TODO - BACKEND STARTS HERE!!!!
 
         except:
              message = "Form elements cannot be retrieved."
@@ -264,6 +262,24 @@ def list_stations():
 def error_found(message):
     flash(message, 'error')
     to_index()
+
+# displaying the outputted route
+def show_route(text):
+
+    # initial route string
+    route_output = ""
+
+    try:
+
+        #TODO - set up route output
+
+        # switching to the route page
+        return render_template("route.html", injected_html=Markup(route_output))
+
+    # catches anything that goes wrong
+    except:
+        message = "Something went wrong."
+        error_found(message)
 
 
 if __name__ == "__main__":
