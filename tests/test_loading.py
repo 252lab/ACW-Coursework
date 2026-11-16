@@ -7,3 +7,7 @@ INDEX_URL = (
     Path(__file__).resolve().parents[1] / "app" / "templates" / "index.html"
 ).as_uri()
 
+ROUTE_URL = (
+        Path(__file__).resolve().parents[1] / "app" / "templates" / "route.html"
+).as_uri()
+
