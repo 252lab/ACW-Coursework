@@ -14,7 +14,6 @@ with (Path(__file__).with_name("naptan.json")).open(encoding="utf-8") as f:
 
 STATION_NAMES = {s["naptanID"]: s["commonName"] for s in NAPTAN}
 STATION_IDS = {s["commonName"].casefold(): s["naptanID"] for s in NAPTAN}
-STATION_OBJECTS = []
 EST_MAX_TRAIN_SPEED = 60 # tfl says that trains can reach about 60 mph
 
 class Train:
@@ -22,25 +21,6 @@ class Train:
         self.line = ""
         self.direction = ""
         self.stops = []
-
-
-class Station:
-    def __init__(self, naptan, name, lat, lon):
-        self.trains = []
-        self.naptan = naptan
-        self.name = name
-        self.lat = lat
-        self.lon = lon
-    
-    def get_lat(self):
-        return self.lat
-
-    def get_lon(self):
-        return self.lon
-
-    def __repr__(self):
-        return f"Station(naptan='{self.naptan}', name='{self.name}', lat={self.lat}, lon={self.lon})"
-
 
 class Route:
     def __init__(self, station, current_time):
@@ -67,35 +47,30 @@ def get_json(path):
     response.raise_for_status()  # Raise an error for bad responses
     return response.json()
 
+""" Fetches the stations long and lats from a csv file
+    Converts fetched values from file and returns
+    a dictionary of station NapTans and their lons and lats
+    {String: (float,float)}
+    """
+def get_stations_lon_lat_dictionary(station_coord_csv=r"../tfl-stationdata-detailed/StationPoints.csv"):
+    # load the csv file
+    points = pd.read_csv(station_coord_csv)
 
-def get_station_objects_from_csv():
-    # Load the CSV files from your extracted folder
-    stations_df = pd.read_csv("../tfl-stationdata-detailed/Stations.csv")
-    points_df = pd.read_csv("../tfl-stationdata-detailed/StationPoints.csv")
+    # filter for tube stations using NapTan
+    tube_points = points[points["StationUniqueId"].str.startswith("940GZZLU", na=False)]
 
-    # Filter for Tube stations using the NaPTAN prefix '940GZZLU'
-    tube_stations = stations_df[stations_df["UniqueId"].str.startswith("940GZZLU", na=False)]
+    # remove duplicates
+    unique_points = tube_points.drop_duplicates(subset=["StationUniqueId"])
 
-    # Merge with StationPoints to grab coordinates (Lat/Lon)
-    merged_data = pd.merge(
-        tube_stations[["UniqueId", "Name"]],
-        points_df[["StationUniqueId", "Lat", "Lon"]],
-        left_on="UniqueId",
-        right_on="StationUniqueId",
-        how="inner"
-    ).drop_duplicates(subset=["UniqueId"]) # Keep one entry per station
+    # convert to dictionary
+    coord_dict = {}
+    for _, row in unique_points.iterrows():
+        naptan = row["StationUniqueId"]
+        lat = row["Lat"]
+        lon = row["Lon"]
+        coord_dict[naptan] = (lat,lon)
 
-    # Instantiate the Station objects
-    for _, row in merged_data.iterrows():
-        station = Station(
-            naptan=row["UniqueId"],
-            name=row["Name"],
-            lat=row["Lat"],
-            lon=row["Lon"]
-        )
-    
-    STATION_OBJECTS.append(station)
-
+    return coord_dict
 
 def get_station_id(station):
     # Allow NAPTAN IDs directly
@@ -229,21 +204,20 @@ def _get_routes_for_line_cached(line_id: str, direction: str) -> tuple[tuple[str
     ordered_line_routes = response.get("orderedLineRoutes", [])
     return tuple(tuple(route.get("naptanIds", [])) for route in ordered_line_routes)
 
-
+""" Hueristic calculated assuming input is two tuples of lat and lons
+    starting station (lat,lon)
+    ending station (lat, lon)
+    """
 def heuristic(last_station, new_station, heuristic_type="dijkstra"):  # ADD ACTUAL HEURISTIC HERE
     if heuristic_type == "dijkstra":
         return 0
     else:
-        # Get lats and lons between stations
-        ls_lat_lon = (last_station.get_lat(), last_station1.get_lon())
-        ns_lat_lon = (new_station.get_lat(), new_station.get_lon())
-
         # Find the Eueclidian distance
-        dist_miles = geodesic(ls_lat_lon, ns_lat_lon).miles
+        dist_miles = geodesic(last_station, new_station).miles
 
         # Find the hueristic, distance divided by estimate max possible speed of train
-        hueristic = dist_miles / EST_MAX_SPEED
-        return 0
+        hueristic = dist_miles / EST_MAX_TRAIN_SPEED
+        return hueristic
 
 
 def init_route(start_station, start_time):
