@@ -21,14 +21,16 @@ class RoutePage:
         self.page.goto(ROUTE_URL)
 
 @pytest.fixture
-def route_page():
+def route_page(request):
     playwright = sync_playwright().start()
+    request.addfinalizer(playwright.stop)
+
     browser = playwright.chromium.launch()
+    request.addfinalizer(browser.close)
+
     page = RoutePage(browser.new_page())
     page.open()
-    yield page
-    browser.close()
-    playwright.stop()
+    return page
 
 @pytest.mark.smoke
 def test_route_page_heading_is_visible(route_page: RoutePage) -> None:
