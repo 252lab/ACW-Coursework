@@ -19,3 +19,12 @@ class LoadingPage:
     def open(self) -> None:
         self.page.goto(LOADING_URL)
 
+@pytest.fixture
+def loading_page():
+    playwright = sync_playwright().start()
+    browser = playwright.chromium.launch()
+    page = LoadingPage(browser.new_page())
+    page.open()
+    yield page
+    browser.close()
+    playwright.stop()
