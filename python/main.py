@@ -257,6 +257,7 @@ def build_route(old_route, new_station, start_time, current_time, new_train):
     next_route = Route(new_station, current_time)
     next_route.current_trains = old_route.current_trains.copy()
     next_route.current_trains.append(new_train)
+    next_route.trains = list(old_route.trains) + [new_train]
     next_route.parent = old_route
     arrival_time = start_time + timedelta(minutes=current_time)
     available_trains = get_trains(new_station, start_time, arrival_time)
@@ -264,11 +265,13 @@ def build_route(old_route, new_station, start_time, current_time, new_train):
     for train in available_trains:
         for group in train.stops:
             for station_name, arrival in group.items():
+                if station_name == new_station:
+                    continue
                 if arrival > current_time:
                     if station_name not in next_route.available_stations:
                         next_route.available_stations[station_name] = {
                             "time": arrival,
-                            "train": train
+                            "train": train,
                         }
     return next_route
 
