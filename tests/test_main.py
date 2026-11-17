@@ -9,6 +9,7 @@ from python.main import (
     astar_step,
     get_json,
     get_station_id,
+    get_trains,
     init_route,
     main,
     route_stations,
@@ -145,6 +146,45 @@ MOCK_JOURNEYS = {
 
 
 START_TIME = datetime(2026, 1, 1, 8, 0, tzinfo=timezone.utc)
+
+
+def test_get_trains_builds_each_train_without_live_predictions(monkeypatch):
+    start_id = get_station_id("Baker Street")
+    stop_id = get_station_id("Oxford Circus")
+    destination_id = get_station_id("Bank")
+    arrivals = [
+        {
+            "vehicleId": f"vehicle-{minute}",
+            "expectedArrival": f"2026-01-01T08:{minute:02d}:00+00:00",
+            "destinationNaptanId": destination_id,
+            "lineId": "bakerloo",
+            "naptanId": start_id,
+            "lineName": "Bakerloo",
+        }
+        for minute in (10, 20)
+    ]
+    timetable = {
+        "timetable": {
+            "routes": [{
+                "stationIntervals": [{
+                    "intervals": [{"stopId": stop_id, "timeToArrival": 4}]
+                }]
+            }]
+        }
+    }
+
+    def fake_get_json(path):
+        if path.startswith("/StopPoint/"):
+            return arrivals
+        return timetable
+
+    monkeypatch.setattr("python.main.get_json", fake_get_json)
+    monkeypatch.setattr("python.main.get_vehicle_predictions", lambda _: [])
+
+    trains = get_trains("Baker Street", START_TIME, START_TIME)
+
+    assert len(trains) == 2
+    assert [train.stops[0][stop_id] for train in trains] == [14, 24]
 
 
 def make_fake_get_trains(trains_by_station):
