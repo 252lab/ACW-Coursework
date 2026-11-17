@@ -285,10 +285,15 @@ def build_route(old_route, new_station, start_time, current_time, new_train):
 
 
 def astar_step(explored_routes, explored_stations, start_time, heuristic_type="dijkstra"):
+    # Explored ruotes is a list of Route Objects
+    # Explored_stations is string list of station names
+
     time_to_change = 5
-    available_stations = {} 
+    available_stations = {} # dictnionary of shortest paths to next stations
     for current_route in explored_routes:
         for station, details in current_route.available_stations.items():
+            # Does this fetch a station name as a string, is details the arrival time?
+
             if station not in explored_stations:
                 potential_time = details["time"]
                 if current_route.parent is not None:
@@ -297,8 +302,11 @@ def astar_step(explored_routes, explored_stations, start_time, heuristic_type="d
                     station not in available_stations
                     or potential_time < available_stations[station]["time"]
                 ):
+                    ## This seems to add a new available station if it is not seen
+                    ## or update the station route with the new best potential time
+                    ## adding the route (station information ect.) to it
                     available_stations[station] = {
-                        "time": potential_time,
+                        "time": potential_time, # how can we know what time it will stop there, as change time is added
                         "train": details["train"],
                         "route": current_route,
                     }
@@ -332,6 +340,7 @@ def astar_step(explored_routes, explored_stations, start_time, heuristic_type="d
             )  # make a new route with the shortest time and the new station
             break
 
+    ## Is this not a greedy implementation, does not keep the other routes
     return next_route, new_station
 
 
@@ -340,12 +349,12 @@ def main(start_station, end_station, start_time):
     if not initial_route.available_stations:
         return None
 
-    # Get staion lat and lon in dictionary
+    # Get station lat and lon in dictionary {NapTan: (lat,lon)}
     station_lat_lon = get_stations_lon_lat_dictionary()
 
     route_found = False
     routes = [initial_route]
-    explored_stations = [start_station]
+    explored_stations = [start_station] # String
     while not route_found:
         next_route, next_station = astar_step(routes, explored_stations, start_time)
         if next_route is None:
