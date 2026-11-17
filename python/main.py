@@ -223,7 +223,7 @@ def _get_routes_for_line_cached(line_id: str, direction: str) -> tuple[tuple[str
     ordered_line_routes = response.get("orderedLineRoutes", [])
     return tuple(tuple(route.get("naptanIds", [])) for route in ordered_line_routes)
 
-def heuristic(last_station, new_station, heuristic_type="dijkstra"):  # ADD ACTUAL HEURISTIC HERE
+def heuristic(last_station, new_station, station_lat_lon, heuristic_type="dijkstra"):
     """
     Heuristic calculated assuming input is two tuples of lat and lons
     starting station (lat,lon)
@@ -231,13 +231,14 @@ def heuristic(last_station, new_station, heuristic_type="dijkstra"):  # ADD ACTU
     """
     if heuristic_type == "dijkstra":
         return 0
-    else:
-        # Find the Eueclidian distance
-        dist_miles = geodesic(last_station, new_station).miles
+    coord1 = station_lat_lon.get(last_station)
+    coord2 = station_lat_lon.get(new_station)
+    # Find the Eueclidian distance
+    dist_miles = geodesic(coord1, coord2).miles
 
-        # Find the hueristic, distance divided by estimate max possible speed of train
-        heuristic = dist_miles / EST_MAX_TRAIN_SPEED
-        return heuristic
+    # Find the hueristic, distance divided by estimate max possible speed of train
+    heuristic = dist_miles / EST_MAX_TRAIN_SPEED
+    return heuristic
 
 
 def init_route(start_station, start_time):
@@ -284,7 +285,13 @@ def build_route(old_route, new_station, start_time, current_time, new_train):
     return next_route
 
 
-def astar_step(explored_routes, explored_stations, start_time, heuristic_type="dijkstra"):
+def astar_step(
+    explored_routes,
+    explored_stations,
+    start_time,
+    station_lat_lon,
+    heuristic_type="dijkstra",
+):
     # Explored ruotes is a list of Route Objects
     # Explored_stations is string list of station names
 
@@ -322,7 +329,12 @@ def astar_step(explored_routes, explored_stations, start_time, heuristic_type="d
         # calculate the potential time to the new station and add the heuristic value for that station
         potential_time = candidate_stations[station]["time"]
         # calculate the heuristic value to the new station
-        heuristic_value = heuristic(candidate_stations[station]["route"].station, station, heuristic_type) # calculate the total time from the current station to the next station, using the potential time and the heuristic value
+        heuristic_value = heuristic(
+            candidate_stations[station]["route"].station,
+            station,
+            station_lat_lon,
+            heuristic_type,
+        )
         total_time = potential_time + heuristic_value
         # add the total_time to the potential_times dictionary, with the key as potential next station
         potential_times[station] = total_time
@@ -357,7 +369,12 @@ def main(start_station, end_station, start_time):
     explored_routes = [initial_route]
     explored_stations = [start_station]
     while not route_found:
-        next_route, next_station = astar_step(explored_routes, explored_stations, start_time)
+        next_route, next_station = astar_step(
+            explored_routes,
+            explored_stations,
+            start_time,
+            station_lat_lon,
+        )
         if next_route is None:
             return None
 
