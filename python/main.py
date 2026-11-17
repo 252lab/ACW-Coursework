@@ -307,19 +307,10 @@ def astar_step(explored_routes, explored_stations, start_time, heuristic_type="d
         print("No available stations to explore. Ending search.")
         return None, None
 
-    shortest_routes = []
-    current_shortest = float("inf")
-    for x in available_stations:
-        if available_stations[x]["time"] < current_shortest:
-            shortest_routes = [x]
-            current_shortest = available_stations[x]["time"] # FIX: changed to available_stations[x]["time"] to get the correct time for the station
-        elif available_stations[x]["time"] == current_shortest:
-            shortest_routes.append(x)
-
     # for each of the shortest_routes, find the potential time to the new station, and add the heuristic value for that station. Then select the station with the lowest total time.
     potential_times = {}  # a dictionary where the key is the next station and the value is the predicted time to travel to it
     # iterate through the shortest_routes and calculate the total time for each station
-    for station in shortest_routes:
+    for station in available_stations:
         # calculate the potential time to the new station and add the heuristic value for that station
         potential_time = available_stations[station]["time"]
         # calculate the heuristic value to the new station
