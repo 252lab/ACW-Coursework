@@ -125,10 +125,9 @@ def get_station_order(timetable):
     for interval_group in route_data["stationIntervals"]:
         stations = []
         for interval in interval_group["intervals"]:
-            station_id = interval["stopId"]
-            name = STATION_NAMES.get(station_id)
-            if name:
-                stations.append((name, interval["timeToArrival"]))
+            stop_id = interval["stopId"]
+            if stop_id in STATION_NAMES:  # keeps your old filter for stops not in naptan.json
+                stations.append((stop_id, interval["timeToArrival"]))
         station_groups.append(stations)
     return station_groups
 
