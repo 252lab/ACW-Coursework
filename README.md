@@ -61,5 +61,6 @@ TfL API: https://api.tfl.gov.uk
 ## Team members and responsibilities:
 
 Livia Banyai: Back-end development (helper functions, caching), automated test suites (frontend and backend), repository maintenance (updating conftest.py, README, requirements.txt, etc.)
+Laura Bonnelame:  Front-end development (html, CSS & JavaScript files), input validation (from the html form), file management and the powerpoint
 
 # TODO: everyone summarise what you've done!
