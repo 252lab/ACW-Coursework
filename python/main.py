@@ -289,7 +289,7 @@ def astar_step(explored_routes, explored_stations, start_time, heuristic_type="d
     # Explored_stations is string list of station names
 
     time_to_change = 5
-    available_stations = {} # dictnionary of shortest paths to next stations
+    candidate_stations = {}
     for current_route in explored_routes:
         for station, details in current_route.available_stations.items():
             # Does this fetch a station name as a string, is details the arrival time?
@@ -299,30 +299,27 @@ def astar_step(explored_routes, explored_stations, start_time, heuristic_type="d
                 if current_route.parent is not None:
                     potential_time += time_to_change
                 if (
-                    station not in available_stations
-                    or potential_time < available_stations[station]["time"]
+                    station not in candidate_stations
+                    or potential_time < candidate_stations[station]["time"]
                 ):
-                    ## This seems to add a new available station if it is not seen
-                    ## or update the station route with the new best potential time
-                    ## adding the route (station information ect.) to it
                     available_stations[station] = {
-                        "time": potential_time, # how can we know what time it will stop there, as change time is added
+                        "time": potential_time,
                         "train": details["train"],
                         "route": current_route,
                     }
 
-    if not available_stations: # NEW: return None, None if there are no available stations to explore
+    if not candidate_stations:
         print("No available stations to explore. Ending search.")
         return None, None
 
     # for each of the shortest_routes, find the potential time to the new station, and add the heuristic value for that station. Then select the station with the lowest total time.
     potential_times = {}  # a dictionary where the key is the next station and the value is the predicted time to travel to it
     # iterate through the shortest_routes and calculate the total time for each station
-    for station in available_stations:
+    for station in candidate_stations:
         # calculate the potential time to the new station and add the heuristic value for that station
-        potential_time = available_stations[station]["time"]
+        potential_time = candidate_stations[station]["time"]
         # calculate the heuristic value to the new station
-        heuristic_value = heuristic(available_stations[station]["route"].station, station, heuristic_type) # calculate the total time from the current station to the next station, using the potential time and the heuristic value
+        heuristic_value = heuristic(candidate_stations[station]["route"].station, station, heuristic_type) # calculate the total time from the current station to the next station, using the potential time and the heuristic value
         total_time = potential_time + heuristic_value
         # add the total_time to the potential_times dictionary, with the key as potential next station
         potential_times[station] = total_time
@@ -332,11 +329,11 @@ def astar_step(explored_routes, explored_stations, start_time, heuristic_type="d
         if potential_times[time] == min(potential_times.values()):  # if the time is the shortest time, then make a new route with that station and return it
             new_station = time  # set the new station to the station with the shortest time
             next_route = build_route(
-                available_stations[new_station]["route"],
+                candidate_stations[new_station]["route"],
                 new_station,
                 start_time,
-                available_stations[new_station]["time"],
-                available_stations[new_station]["train"],
+                candidate_stations[new_station]["time"],
+                candidate_stations[new_station]["train"],
             )  # make a new route with the shortest time and the new station
             break
 
@@ -353,10 +350,10 @@ def main(start_station, end_station, start_time):
     station_lat_lon = get_stations_lon_lat_dictionary()
 
     route_found = False
-    routes = [initial_route]
-    explored_stations = [start_station] # String
+    explored_routes = [initial_route]
+    explored_stations = [start_station]
     while not route_found:
-        next_route, next_station = astar_step(routes, explored_stations, start_time)
+        next_route, next_station = astar_step(explored_routes, explored_stations, start_time)
         if next_route is None:
             return None
 
@@ -364,7 +361,7 @@ def main(start_station, end_station, start_time):
             next_route.route_complete = True
             return next_route
 
-        routes.append(next_route)
+        explored_routes.append(next_route)
         explored_stations.append(next_station)
         if next_route.route_complete:
             print(next_route)
