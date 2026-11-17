@@ -13,8 +13,11 @@ BASE_URL = "https://api.tfl.gov.uk"
 with (Path(__file__).with_name("naptan.json")).open(encoding="utf-8") as f:
     NAPTAN = json.load(f)
 
+def normalize_station_name(name):
+    return name.replace("’", "'").casefold().strip()
+
 STATION_NAMES = {s["naptanID"]: s["commonName"] for s in NAPTAN}
-STATION_IDS = {s["commonName"].casefold(): s["naptanID"] for s in NAPTAN}
+STATION_IDS = {normalize_station_name(s["commonName"]): s["naptanID"] for s in NAPTAN}
 EST_MAX_TRAIN_SPEED = 60 # tfl says that trains can reach about 60 mph
 
 class Train:
@@ -38,7 +41,6 @@ class Route:
         self.f_score = 0
 
         self.route_complete = False
-
 
 def route_stations(route):
     """Return the ordered station path by walking back through parent routes."""
@@ -85,13 +87,17 @@ def get_stations_lon_lat_dictionary(station_coord_csv=r"../tfl-stationdata-detai
     return coord_dict
 
 def get_station_id(station):
-    # Allow NAPTAN IDs directly
-    if station.upper().startswith("9"):
-        return station.upper()
-    # Accept a full common name ("Oxford Circus Underground Station") or a short one ("Oxford Circus").
-    # Add " Underground Station" if a short name is provided.
-    for name in (station, station + " Underground Station"):
-        station_id = STATION_IDS.get(name.casefold())
+    # Allow NAPTAN IDs directly.
+    station_str = str(station)
+    if station_str.upper().startswith("9"):
+        return station_str.upper()
+
+    lookup_keys = (
+        normalize_station_name(station_str),
+        normalize_station_name(f"{station_str} Underground Station"),
+    )
+    for key in lookup_keys:
+        station_id = STATION_IDS.get(key)
         if station_id:
             return station_id
     raise ValueError(f"Station not found: {station}")
@@ -376,8 +382,7 @@ def main(start_station, end_station, start_time):
 if __name__ == "__main__":
     for start, end in [
         ("Baker Street", "Bank"),
-        ("Oxford Circus", "King’s Cross St. Pancras"),
-        ("Oxford Circus", "Bond Street"),
+        # can add multiple routes here
     ]:
         route = main(start, end, datetime(2026, 11, 17, 11, 0, tzinfo=timezone.utc))
         if route is None:
