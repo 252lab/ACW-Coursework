@@ -344,10 +344,10 @@ def main(start_station, end_station, start_time):
     station_lat_lon = get_stations_lon_lat_dictionary()
 
     route_found = False
-    routes = [initial_route]
+    explored_routes = [initial_route]
     explored_stations = [start_station]
     while not route_found:
-        next_route, next_station = astar_step(routes, explored_stations, start_time)
+        next_route, next_station = astar_step(explored_routes, explored_stations, start_time)
         if next_route is None:
             return None
 
@@ -355,7 +355,7 @@ def main(start_station, end_station, start_time):
             next_route.route_complete = True
             return next_route
 
-        routes.append(next_route)
+        explored_routes.append(next_route)
         explored_stations.append(next_station)
         if next_route.route_complete:
             print(next_route)
