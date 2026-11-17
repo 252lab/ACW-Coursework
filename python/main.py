@@ -328,13 +328,8 @@ def astar_step(
     for station in candidate_stations:
         # calculate the potential time to the new station and add the heuristic value for that station
         potential_time = candidate_stations[station]["time"]
-        # calculate the heuristic value to the new station
-        heuristic_value = heuristic(
-            candidate_stations[station]["route"].station,
-            station,
-            station_lat_lon,
-            heuristic_type,
-        )
+        # FIX: measure distance from the candidate station to the end station
+        heuristic_value = heuristic(station, end_station, station_lat_lon, heuristic_type)
         total_time = potential_time + heuristic_value
         # add the total_time to the potential_times dictionary, with the key as potential next station
         potential_times[station] = total_time
