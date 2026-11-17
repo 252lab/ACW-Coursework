@@ -10,7 +10,8 @@ from python.main import (
     get_json,
     get_station_id,
     init_route,
-    main
+    main,
+    route_stations,
 )
 
 # Types of tests:
@@ -151,6 +152,22 @@ def make_fake_get_trains(trains_by_station):
         return trains
  
     return fake_get_trains
+
+
+def test_main_normalizes_station_names_to_ids(monkeypatch):
+    start_id = get_station_id("Baker Street")
+    end_id = get_station_id("Bank")
+    mock_trains = make_fake_get_trains(
+        {start_id: [{"line": "Mock", "stops": {end_id: 12}}]}
+    )
+    monkeypatch.setattr("python.main.get_trains", mock_trains)
+    monkeypatch.setattr("python.main.get_stations_lon_lat_dictionary", lambda: {})
+
+    route = main("Baker Street", "Bank", START_TIME)
+
+    assert route is not None
+    assert route.route_complete
+    assert route_stations(route) == [start_id, end_id]
 
 
 @pytest.mark.endtoend

@@ -342,6 +342,10 @@ def astar_step(explored_routes, explored_stations, start_time, heuristic_type="d
 
 
 def main(start_station, end_station, start_time):
+    # Keep station identifiers consistent with the NAPTAN IDs from TfL data.
+    start_station = get_station_id(start_station)
+    end_station = get_station_id(end_station)
+
     initial_route = init_route(start_station, start_time)
     if not initial_route.available_stations:
         return None
