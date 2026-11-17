@@ -66,7 +66,11 @@ def get_json(path):
     a dictionary of station NapTans and their lons and lats
     {String: (float,float)}
     """
-def get_stations_lon_lat_dictionary(station_coord_csv=r"../tfl-stationdata-detailed/StationPoints.csv"):
+def get_stations_lon_lat_dictionary(
+    station_coord_csv=Path(__file__).resolve().parent.parent
+    / "tfl-stationdata-detailed"
+    / "StationPoints.csv",
+):
     # load the csv file
     points = pd.read_csv(station_coord_csv)
 
