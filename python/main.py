@@ -148,6 +148,8 @@ def get_trains(station, start_time, arrival_time, minutes=30):
         <= datetime.fromisoformat(a["expectedArrival"].replace("Z", "+00:00"))
         <= end_time
     ]
+    if not arrivals:
+        return []
     print("there are " + str(len(arrivals)) + " arrivals")
     trains = []
     # Get unique vehicles
@@ -349,8 +351,12 @@ def astar_step(explored_routes, explored_stations, start_time, heuristic_type="d
 
 
 def main(start_station, end_station, start_time):
+    initial_route = init_route(start_station, start_time)
+    if not initial_route.available_stations:
+        return None
+
     route_found = False
-    routes = [init_route(start_station, start_time)]
+    routes = [initial_route]
     explored_stations = [start_station]
     while not route_found:
         next_route, next_station = astar_step(routes, explored_stations, start_time)
