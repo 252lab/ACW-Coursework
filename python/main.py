@@ -286,7 +286,7 @@ def build_route(old_route, new_station, start_time, current_time, new_train):
 
 def astar_step(explored_routes, explored_stations, start_time, heuristic_type="dijkstra"):
     time_to_change = 5
-    available_stations = {} 
+    candidate_stations = {}
     for current_route in explored_routes:
         for station, details in current_route.available_stations.items():
             if station not in explored_stations:
@@ -294,27 +294,27 @@ def astar_step(explored_routes, explored_stations, start_time, heuristic_type="d
                 if current_route.parent is not None:
                     potential_time += time_to_change
                 if (
-                    station not in available_stations
-                    or potential_time < available_stations[station]["time"]
+                    station not in candidate_stations
+                    or potential_time < candidate_stations[station]["time"]
                 ):
-                    available_stations[station] = {
+                    candidate_stations[station] = {
                         "time": potential_time,
                         "train": details["train"],
                         "route": current_route,
                     }
 
-    if not available_stations: # NEW: return None, None if there are no available stations to explore
+    if not candidate_stations:
         print("No available stations to explore. Ending search.")
         return None, None
 
     # for each of the shortest_routes, find the potential time to the new station, and add the heuristic value for that station. Then select the station with the lowest total time.
     potential_times = {}  # a dictionary where the key is the next station and the value is the predicted time to travel to it
     # iterate through the shortest_routes and calculate the total time for each station
-    for station in available_stations:
+    for station in candidate_stations:
         # calculate the potential time to the new station and add the heuristic value for that station
-        potential_time = available_stations[station]["time"]
+        potential_time = candidate_stations[station]["time"]
         # calculate the heuristic value to the new station
-        heuristic_value = heuristic(available_stations[station]["route"].station, station, heuristic_type) # calculate the total time from the current station to the next station, using the potential time and the heuristic value
+        heuristic_value = heuristic(candidate_stations[station]["route"].station, station, heuristic_type) # calculate the total time from the current station to the next station, using the potential time and the heuristic value
         total_time = potential_time + heuristic_value
         # add the total_time to the potential_times dictionary, with the key as potential next station
         potential_times[station] = total_time
@@ -324,11 +324,11 @@ def astar_step(explored_routes, explored_stations, start_time, heuristic_type="d
         if potential_times[time] == min(potential_times.values()):  # if the time is the shortest time, then make a new route with that station and return it
             new_station = time  # set the new station to the station with the shortest time
             next_route = build_route(
-                available_stations[new_station]["route"],
+                candidate_stations[new_station]["route"],
                 new_station,
                 start_time,
-                available_stations[new_station]["time"],
-                available_stations[new_station]["train"],
+                candidate_stations[new_station]["time"],
+                candidate_stations[new_station]["train"],
             )  # make a new route with the shortest time and the new station
             break
 
