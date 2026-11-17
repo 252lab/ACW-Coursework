@@ -356,6 +356,11 @@ def main(start_station, end_station, start_time):
         next_route, next_station = astar_step(routes, explored_stations, start_time)
         if next_route is None:
             return None
+
+        if next_station == end_station:
+            next_route.route_complete = True
+            return next_route
+
         routes.append(next_route)
         explored_stations.append(next_station)
         if next_route.route_complete:
