@@ -302,8 +302,11 @@ def astar_step(explored_routes, explored_stations, start_time, heuristic_type="d
                     station not in candidate_stations
                     or potential_time < candidate_stations[station]["time"]
                 ):
-                    available_stations[station] = {
-                        "time": potential_time,
+                    ## This seems to add a new available station if it is not seen
+                    ## or update the station route with the new best potential time
+                    ## adding the route (station information ect.) to it
+                    candidate_stations[station] = {
+                        "time": potential_time, # how can we know what time it will stop there, as change time is added
                         "train": details["train"],
                         "route": current_route,
                     }
