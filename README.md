@@ -6,7 +6,7 @@ The project is focused on developing a route-planning website for journeys in Lo
 
 ## Problem and intended users
 
-Finding a the most efficient public-transport route can require comparing possible connections and journey times. This project aims to let a user provide a start stop, end stop, and a start or end time, and have the program calculate the more efficient route for them.
+Finding the most efficient public-transport route can require comparing multiple possible connections and journey times. This project aims to let a user provide a start stop, end stop, and a start or end time, and have the program calculate the most efficient route for them.
 
 **Intended users:** People travelling around London who want help planning the most efficient journey along the tube network.
 
@@ -20,11 +20,11 @@ $$f(n) = g(n) + h(n)$$
 
 ### Algorithm outline
 
-(NOTE: Fill this in once the project has been finished.)
+(NOTE: fill this in once the project has been finished.)
 
 ### Complexity
 
-(NOTE: analuyse the space-time complexity once the project has been finished)
+(NOTE: analyse the space-time complexity once the project has been finished)
 
 ## Installation
 
@@ -114,7 +114,7 @@ External data and services:
 
 ## Known limitations and work remaining
 
-- Route-search behavior and the A\* heuristic have not yet been fully validated; confirm heuristic units match the journey-time units.
+- Route-search behaviour and the A\* heuristic have not yet been fully validated; confirm heuristic units match the journey-time units.
 - Transfer/waiting-time calculation and use of live arrival predictions need verification.
 - The station-coordinate CSV path is currently relative to the process working directory and can fail when launched from the repository root.
 - Route-journey tests currently fail because of that CSV path; the two faster-route test functions are placeholders.
@@ -123,8 +123,7 @@ External data and services:
 
 ## Team contributions
 
-Livia Banyai: Back-end development (helper functions, caching), automated test suites (frontend and backend), repository maintenance (updating conftest.py, README, requirements.txt, etc.)
-Laura Bonnelame:  Front-end development (html, CSS & JavaScript files), input validation (from the html form), file management and the powerpoint
+- **Livia Banyai:** Back-end development (helper functions, caching), automated test suites (frontend and backend), repository maintenance (updating conftest.py, README, requirements.txt, etc.)
+- **Laura Bonnelame:**  Front-end development (html, CSS & JavaScript files), input validation (from the html form), file management and the powerpoint
 
 **To do:** Each team member should review this summary and add any missing contributions.
-# TODO: everyone summarise what you've done!
