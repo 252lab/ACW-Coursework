@@ -289,6 +289,7 @@ def astar_step(
     explored_routes,
     explored_stations,
     start_time,
+    end_station,
     station_lat_lon,
     heuristic_type="dijkstra",
 ):
@@ -303,8 +304,14 @@ def astar_step(
 
             if station not in explored_stations:
                 potential_time = details["time"]
+                # Check if the train arriving at this station is different from the train we were previously on
                 if current_route.parent is not None:
-                    potential_time += time_to_change
+                    # Compare the current train to the train used in the parent route
+                    previous_train = current_route.current_trains[-1] if current_route.current_trains else None
+                    current_train = details["train"]
+                    
+                    if previous_train != current_train:
+                        potential_time += time_to_change  # Only add 5 mins if it's a transfer
                 if (
                     station not in candidate_stations
                     or potential_time < candidate_stations[station]["time"]
