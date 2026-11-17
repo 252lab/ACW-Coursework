@@ -167,53 +167,54 @@ def get_trains(station, start_time, arrival_time, minutes=30):
         vehicle_id = p.get("vehicleId")
         if vehicle_id:
             vehicles.setdefault(vehicle_id, []).append(p)
-    # Create train objects
-        timetables = {}
-        for arrival in arrivals:
-            if not arrival.get("destinationNaptanId"):
-                print("Missing destinationNaptanId: ")
-                print(arrival)
-                continue
-            
-            # get the train's expected arrival time
-            expected_str = arrival.get("expectedArrival")
-            if not expected_str:
-                continue
-            actual_arrival_dt = datetime.fromisoformat(expected_str.replace("Z", "+00:00"))
-            actual_arrival_mins = round((actual_arrival_dt - start_time).total_seconds() / 60)
+    # Create train objects independently of whether vehicle predictions exist.
+    timetables = {}
+    for arrival in arrivals:
+        if not arrival.get("destinationNaptanId"):
+            print("Missing destinationNaptanId: ")
+            print(arrival)
+            continue
 
-            vehicle_id = arrival["vehicleId"]
-            t = Train()
-            t.line = arrival.get("lineName", "")
-            t.direction = arrival.get("direction", "")
-            
-            timetable_key = (
-                arrival["lineId"],
-                arrival["naptanId"],
-                arrival["destinationNaptanId"],
+        expected_str = arrival.get("expectedArrival")
+        if not expected_str:
+            continue
+        actual_arrival_dt = datetime.fromisoformat(expected_str.replace("Z", "+00:00"))
+        actual_arrival_mins = round((actual_arrival_dt - start_time).total_seconds() / 60)
+
+        vehicle_id = arrival["vehicleId"]
+        t = Train()
+        t.line = arrival.get("lineName", "")
+        t.direction = arrival.get("direction", "")
+
+        timetable_key = (
+            arrival["lineId"],
+            arrival["naptanId"],
+            arrival["destinationNaptanId"],
+        )
+        if timetable_key not in timetables:
+            timetables[timetable_key] = get_json(
+                f"/Line/{timetable_key[0]}/Timetable/" f"{timetable_key[1]}/to/{timetable_key[2]}"
             )
-            if timetable_key not in timetables:
-                timetables[timetable_key] = get_json(
-                    f"/Line/{timetable_key[0]}/Timetable/" f"{timetable_key[1]}/to/{timetable_key[2]}"
-                )
-            timetable = timetables[timetable_key]
-            station_groups = get_station_order(timetable)
-            
-            for group in station_groups:
-                stops = {}
-                for name, offset in group:
-                    stops[name] = actual_arrival_mins + offset
-                t.stops.append(stops)
-        # Add live predictions for this vehicle only
-        for p in vehicles.get(vehicle_id, []):
-            name = p.get("stationName")
-            expected = p.get("expectedArrival")
+        timetable = timetables[timetable_key]
+        station_groups = get_station_order(timetable)
+
+        for group in station_groups:
+            stops = {}
+            for name, offset in group:
+                stops[name] = actual_arrival_mins + offset
+            t.stops.append(stops)
+
+        # Add live predictions for this vehicle only.
+        for prediction in vehicles.get(vehicle_id, []):
+            name = prediction.get("stationName")
+            expected = prediction.get("expectedArrival")
             if name and expected:
                 predicted_arrival = datetime.fromisoformat(expected.replace("Z", "+00:00"))
                 predicted_minutes = round((predicted_arrival - start_time).total_seconds() / 60)
                 for stops in t.stops:
                     if name in stops:
                         stops[name] = predicted_minutes
+
         trains.append(t)
     for t in trains:
         print("\nLine:", t.line)
