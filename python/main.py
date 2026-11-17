@@ -369,4 +369,14 @@ def main(start_station, end_station, start_time):
 
 
 if __name__ == "__main__":
-    main("Baker Street", "Bank", datetime(2026, 1, 1, 8, 0, tzinfo=timezone.utc))
+    for start, end in [
+        ("Baker Street", "Bank"),
+        ("Oxford Circus", "King’s Cross St. Pancras"),
+        ("Oxford Circus", "Bond Street"),
+    ]:
+        route = main(start, end, datetime(2026, 11, 17, 11, 0, tzinfo=timezone.utc))
+        if route is None:
+            print(f"No route found from {start} to {end}.")
+        else:
+            print(f"Route from {start} to {end}: {route_stations(route)}")
+
