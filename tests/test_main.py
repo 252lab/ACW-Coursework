@@ -101,6 +101,9 @@ MOCK_JOURNEYS = {
     "direct": {
         "start": "Start",
         "destination": "End",
+        "expected_time": 12,
+        "expected_stations": ["Start", "End"],
+        "expected_lines": ["Red"],
         "trains": {
             "Start": [{"line": "Red", "stops": {"End": 12}}],
         },
@@ -108,6 +111,9 @@ MOCK_JOURNEYS = {
     "one_switch": {
         "start": "Start",
         "destination": "End",
+        "expected_time": 20,
+        "expected_stations": ["Start", "Mid", "End"],
+        "expected_lines": ["Red", "Blue"],
         "trains": {
             "Start": [
                 {"line": "Red", "stops": {"Mid": 5, "End": 25}},
@@ -120,9 +126,12 @@ MOCK_JOURNEYS = {
     "two_switches": {
         "start": "Start",
         "destination": "End",
+        "expected_time": 40,
+        "expected_stations": ["Start", "Mid1", "Mid2", "End"],
+        "expected_lines": ["Red", "Green", "Blue"],
         "trains": {
             "Start": [
-                {"line": "Red", "stops": {"Mid1": 4, "End": 40}},
+                {"line": "Red", "stops": {"Mid1": 4, "End": 50}},
             ],
             "Mid1": [
                 {"line": "Green", "stops": {"Mid2": 8}},
@@ -178,14 +187,16 @@ def test_journeys(name, monkeypatch):
     """
     journey = MOCK_JOURNEYS[name]
     monkeypatch.setattr("python.main.get_trains", make_fake_get_trains(journey["trains"]))
+    # These synthetic graph labels are not real TfL station names or NAPTAN IDs.
+    monkeypatch.setattr("python.main.get_station_id", lambda station: station)
 
     route = main(journey["start"], journey["destination"], START_TIME)
 
     assert route is not None
     assert route.route_complete
-    assert route.current_time == 12
-    assert route_stations(route) == ["Start", "End"]
-    assert [train.line for train in route.trains] == ["Red"]
+    assert route.current_time == journey["expected_time"]
+    assert route_stations(route) == journey["expected_stations"]
+    assert [train.line for train in route.trains] == journey["expected_lines"]
 
 
 @pytest.mark.endtoend
