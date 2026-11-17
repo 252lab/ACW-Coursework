@@ -223,11 +223,12 @@ def _get_routes_for_line_cached(line_id: str, direction: str) -> tuple[tuple[str
     ordered_line_routes = response.get("orderedLineRoutes", [])
     return tuple(tuple(route.get("naptanIds", [])) for route in ordered_line_routes)
 
-""" Hueristic calculated assuming input is two tuples of lat and lons
+def heuristic(last_station, new_station, heuristic_type="dijkstra"):  # ADD ACTUAL HEURISTIC HERE
+    """
+    Heuristic calculated assuming input is two tuples of lat and lons
     starting station (lat,lon)
     ending station (lat, lon)
     """
-def heuristic(last_station, new_station, heuristic_type="dijkstra"):  # ADD ACTUAL HEURISTIC HERE
     if heuristic_type == "dijkstra":
         return 0
     else:
@@ -235,8 +236,8 @@ def heuristic(last_station, new_station, heuristic_type="dijkstra"):  # ADD ACTU
         dist_miles = geodesic(last_station, new_station).miles
 
         # Find the hueristic, distance divided by estimate max possible speed of train
-        hueristic = dist_miles / EST_MAX_TRAIN_SPEED
-        return hueristic
+        heuristic = dist_miles / EST_MAX_TRAIN_SPEED
+        return heuristic
 
 
 def init_route(start_station, start_time):
