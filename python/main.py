@@ -135,9 +135,9 @@ def get_station_order(timetable):
     for interval_group in route_data["stationIntervals"]:
         stations = []
         for interval in interval_group["intervals"]:
-            stop_id = interval["stopId"]
-            if stop_id in STATION_NAMES:  # keeps your old filter for stops not in naptan.json
-                stations.append((stop_id, interval["timeToArrival"]))
+            station_id = interval["stopId"]
+            if station_id in STATION_NAMES:
+                stations.append((station_id, interval["timeToArrival"]))
         station_groups.append(stations)
     return station_groups
 
@@ -210,14 +210,22 @@ def get_trains(station, start_time, arrival_time, minutes=30):
 
         # Add live predictions for this vehicle only.
         for prediction in vehicles.get(vehicle_id, []):
-            name = prediction.get("stationName")
+            prediction_station = prediction.get("naptanId")
+            if prediction_station:
+                prediction_station = get_station_id(prediction_station)
+            elif prediction.get("stationName"):
+                try:
+                    prediction_station = get_station_id(prediction["stationName"])
+                except ValueError:
+                    continue
+
             expected = prediction.get("expectedArrival")
-            if name and expected:
+            if prediction_station and expected:
                 predicted_arrival = datetime.fromisoformat(expected.replace("Z", "+00:00"))
                 predicted_minutes = round((predicted_arrival - start_time).total_seconds() / 60)
                 for stops in t.stops:
-                    if name in stops:
-                        stops[name] = predicted_minutes
+                    if prediction_station in stops:
+                        stops[prediction_station] = predicted_minutes
 
         trains.append(t)
     for t in trains:
@@ -262,13 +270,13 @@ def init_route(start_station, start_time):
 
     for train in trains:
         for stop_group in train.stops:
-            for station_name, arrival_time in stop_group.items():
+            for station_id, arrival_time in stop_group.items():
                 if arrival_time <= initial_route.current_time:
                     continue
 
-                current = initial_route.available_stations.get(station_name)
+                current = initial_route.available_stations.get(station_id)
                 if current is None or arrival_time < current["time"]:
-                    initial_route.available_stations[station_name] = {
+                    initial_route.available_stations[station_id] = {
                         "time": arrival_time,
                         "train": train,
                     }
@@ -287,12 +295,12 @@ def build_route(old_route, new_station, start_time, current_time, new_train):
     # Find available stations
     for train in available_trains:
         for group in train.stops:
-            for station_name, arrival in group.items():
-                if station_name == new_station:
+            for station_id, arrival in group.items():
+                if station_id == new_station:
                     continue
                 if arrival > current_time:
-                    if station_name not in next_route.available_stations:
-                        next_route.available_stations[station_name] = {
+                    if station_id not in next_route.available_stations:
+                        next_route.available_stations[station_id] = {
                             "time": arrival,
                             "train": train,
                         }
@@ -403,11 +411,15 @@ def main(start_station, end_station, start_time):
 
 
 if __name__ == "__main__":
+    start_time = datetime.now(timezone.utc)
     for start, end in [
         ("Baker Street", "Bank"),
-        # can add multiple routes here
+        ("King's Cross St. Pancras", "Waterloo"),
+        ("Stratford", "Victoria"),
+        ("Canary Wharf", "Liverpool Street"),
+        ("Oxford Circus", "Wimbledon"),
     ]:
-        route = main(start, end, datetime(2026, 11, 17, 11, 0, tzinfo=timezone.utc))
+        route = main(start, end, start_time)
         if route is None:
             print(f"No route found from {start} to {end}.")
         else:
