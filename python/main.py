@@ -321,6 +321,9 @@ def astar_step(explored_routes, explored_stations, start_time, heuristic_type="d
 
 
 def main(start_station, end_station, start_time):
+    # Get staion lat and lon in dictionary
+    station_lat_lon = get_stations_lon_lat_dictionary()
+
     route_found = False
     routes = [init_route(start_station)]
     explored_stations = [start_station]
