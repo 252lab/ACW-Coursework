@@ -317,41 +317,29 @@ def astar_step(explored_routes, explored_stations, start_time, heuristic_type="d
             shortest_routes.append(x)
 
     # for each of the shortest_routes, find the potential time to the new station, and add the heuristic value for that station. Then select the station with the lowest total time.
-    for x in shortest_routes:
-        potential_times = (
-            {}
-        )  # a dictionary where the key is the next station and the value is the predicted time to travel to it
-        # iterate through the shortest_routes and calculate the total time for each station
-        for station in shortest_routes:
-            # calculate the potential time to the new station and add the heuristic value for that station
-            potential_time = available_stations[station]["time"]
-            # calculate the heuristic value to the new station
-            heuristic_value = heuristic(
-                available_stations[station]["route"].station, station, heuristic_type
-            )
-            # calculate the total time from the current station to the next station, using the potential time and the heuristic value
-            total_time = potential_time + heuristic_value
-            # add the total_time to the potential_times dictionary, with the key as potential next station
-            potential_times[station] = total_time
+    potential_times = {}  # a dictionary where the key is the next station and the value is the predicted time to travel to it
+    # iterate through the shortest_routes and calculate the total time for each station
+    for station in shortest_routes:
+        # calculate the potential time to the new station and add the heuristic value for that station
+        potential_time = available_stations[station]["time"]
+        # calculate the heuristic value to the new station
+        heuristic_value = heuristic(available_stations[station]["route"].station, station, heuristic_type) # calculate the total time from the current station to the next station, using the potential time and the heuristic value
+        total_time = potential_time + heuristic_value
+        # add the total_time to the potential_times dictionary, with the key as potential next station
+        potential_times[station] = total_time
 
-        # make a new route which is the route from shortest_routes that has the shortest time plus the new station
-        for (
-            time
-        ) in (
-            potential_times
-        ):  # iteratre through the potential_times dictionary and find the station with the shortest time
-            if potential_times[time] == min(
-                potential_times.values()
-            ):  # if the time is the shortest time, then make a new route with that station and return it
-                new_station = time  # set the new station to the station with the shortest time
-                next_route = build_route(
-                    available_stations[new_station]["route"],
-                    new_station,
-                    start_time,
-                    available_stations[new_station]["time"],
-                    available_stations[new_station]["train"],
-                )  # make a new route with the shortest time and the new station
-                break
+    # make a new route which is the route from shortest_routes that has the shortest time plus the new station
+    for time in potential_times: # iterate through the potential_times dictionary and find the station with the shortest time
+        if potential_times[time] == min(potential_times.values()):  # if the time is the shortest time, then make a new route with that station and return it
+            new_station = time  # set the new station to the station with the shortest time
+            next_route = build_route(
+                available_stations[new_station]["route"],
+                new_station,
+                start_time,
+                available_stations[new_station]["time"],
+                available_stations[new_station]["train"],
+            )  # make a new route with the shortest time and the new station
+            break
 
     return next_route, new_station
 
