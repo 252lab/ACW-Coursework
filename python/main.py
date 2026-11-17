@@ -327,20 +327,17 @@ def astar_step(explored_routes, explored_stations, start_time, heuristic_type="d
         # add the total_time to the potential_times dictionary, with the key as potential next station
         potential_times[station] = total_time
 
-    # make a new route which is the route from shortest_routes that has the shortest time plus the new station
-    for time in potential_times: # iterate through the potential_times dictionary and find the station with the shortest time
-        if potential_times[time] == min(potential_times.values()):  # if the time is the shortest time, then make a new route with that station and return it
-            new_station = time  # set the new station to the station with the shortest time
-            next_route = build_route(
-                candidate_stations[new_station]["route"],
-                new_station,
-                start_time,
-                candidate_stations[new_station]["time"],
-                candidate_stations[new_station]["train"],
-            )  # make a new route with the shortest time and the new station
-            break
+    new_station = min(potential_times, key=potential_times.get)
 
-    ## Is this not a greedy implementation, does not keep the other routes
+    next_route = build_route(
+        candidate_stations[new_station]["route"],
+        new_station,
+        start_time,
+        candidate_stations[new_station]["time"],
+        candidate_stations[new_station]["train"],
+
+    )
+
     return next_route, new_station
 
 
