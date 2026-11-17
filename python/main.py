@@ -223,7 +223,7 @@ def _get_routes_for_line_cached(line_id: str, direction: str) -> tuple[tuple[str
     ordered_line_routes = response.get("orderedLineRoutes", [])
     return tuple(tuple(route.get("naptanIds", [])) for route in ordered_line_routes)
 
-def heuristic(last_station, new_station, station_lat_lon, heuristic_type="dijkstra"):
+def heuristic(station, end_station, station_lat_lon, heuristic_type):
     """
     Heuristic calculated assuming input is two tuples of lat and lons
     starting station (lat,lon)
@@ -231,8 +231,8 @@ def heuristic(last_station, new_station, station_lat_lon, heuristic_type="dijkst
     """
     if heuristic_type == "dijkstra":
         return 0
-    coord1 = station_lat_lon.get(last_station)
-    coord2 = station_lat_lon.get(new_station)
+    coord1 = station_lat_lon.get(station)
+    coord2 = station_lat_lon.get(end_station)
     # Find the Eueclidian distance
     dist_miles = geodesic(coord1, coord2).miles
 
