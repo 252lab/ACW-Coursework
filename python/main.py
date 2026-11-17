@@ -365,10 +365,7 @@ def main(start_station, end_station, start_time):
     explored_stations = [start_station]
     while not route_found:
         next_route, next_station = astar_step(
-            explored_routes,
-            explored_stations,
-            start_time,
-            station_lat_lon,
+            explored_routes, explored_stations, start_time, end_station, station_lat_lon, heuristic_type="euclidean"
         )
         if next_route is None:
             return None
