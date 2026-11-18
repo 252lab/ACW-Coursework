@@ -195,6 +195,7 @@ def get_stations_lon_lat_dictionary(
 
 
 def get_station_id(station):
+    station_str = str(station) # Fixed: defined station_str so it doesn't throw NameError
     if station_str.upper().startswith("9"):
         return station_str.upper()
 
@@ -570,18 +571,20 @@ def find_station(stationName):
     # searching the array of stations for a match
     try:
         # getting the list of stations
-        list_stations = list_stations()
+        station_list = list_stations() 
+
+        if not station_list:
+            return -1
 
         # searching through list of stations
-        for x in list_stations:
+        for x in station_list:
 
             # returning station if found
             if x[0] == toMatch:
                 return x[1]
 
-            # otherwise return -1
-            else:
-                return -1
+        # otherwise return -1 if loop finishes without finding it
+        return -1
     # exception handling
     except:
         message = "Station not found."
@@ -626,7 +629,7 @@ def validate_inputs(startLocation, endLocation, startTime):
     try:
         # if no time is entered, get the current time as the start time
         if (startTime == ""):
-            startTime = datetime.datetime.now()
+            startTime = datetime.now(timezone.utc) # Fixed: changed datetime.datetime.now() to datetime.now(timezone.utc)
             
     except:
         # outputting error
@@ -653,7 +656,6 @@ def list_stations():
         # getting the tube stations
         tube_stations = df[df["UniqueId"].str.startswith("940GZZLU", na=False)]
 
-        print(tube_stations)
         # converting to an array
         # data should already be ordered as it is in the csv file
         tube_names = tube_stations[["Name", "UniqueId"]].to_numpy()
@@ -668,7 +670,7 @@ def list_stations():
         return tube_names
 
     except:
-        message = "Couldn't retrive list of stations in network."
+        message = "Couldn't retrive list of stations in network network."
         error_found(message)
 
 
