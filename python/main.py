@@ -38,6 +38,10 @@ SESSION.mount("https://", HTTPAdapter(max_retries=Retry(
     respect_retry_after_header=True,
 )))
 
+# Arrival Cache: {station_id: (fetch_datetime, arrivals_json_data)}
+ARRIVAL_CACHE = {}
+ARRIVAL_CACHE_TTL_SECONDS = 30  # Cache live arrivals for 30 seconds
+
 class Train:
     def __init__(self):
         self.line = ""
@@ -128,17 +132,27 @@ def format_route(route, start_time):
 
 def get_json(path):
     params = {"app_key": APP_KEY} if APP_KEY else None
-    response = SESSION.get(f"{BASE_URL}{path}", params=params, timeout=10)
+    response = SESSION.get(f"{BASE_URL}{path}", params=params, timeout=15)
     response.raise_for_status()
     return response.json()
 
-""" Fetches the stations long and lats from a csv file
-    Converts fetched values from file and returns
-    a dictionary of station NapTans and their lons and lats
-    {String: (float,float)}
-    """
-def get_stations_lon_lat_dictionary(
 
+def get_cached_arrivals(station_id):
+    """Fetch live arrivals with a TTL cache to prevent flooding the TfL API."""
+    now = datetime.now(timezone.utc)
+    if station_id in ARRIVAL_CACHE:
+        cached_time, arrivals_data = ARRIVAL_CACHE[station_id]
+        if (now - cached_time).total_seconds() < ARRIVAL_CACHE_TTL_SECONDS:
+            logger.debug("Cache hit for arrivals at %s", station_id)
+            return arrivals_data
+
+    logger.debug("Cache miss/expired for arrivals at %s, fetching...", station_id)
+    arrivals_data = get_json(f"/StopPoint/{station_id}/Arrivals")
+    ARRIVAL_CACHE[station_id] = (now, arrivals_data)
+    return arrivals_data
+
+
+def get_stations_lon_lat_dictionary(
     station_coord_csv=Path(__file__).resolve().parent.parent
     / "tfl-stationdata-detailed"
     / "StationPoints.csv",
@@ -217,7 +231,9 @@ def get_trains(station, start_time, arrival_time, minutes=30):
     station_id = get_station_id(station)
     logger.debug("Fetching arrivals for %s", station_id)
     end_time = arrival_time + timedelta(minutes=minutes)
-    arrivals = get_json(f"/StopPoint/{station_id}/Arrivals")
+    
+    # Using cached arrivals wrapper here
+    arrivals = get_cached_arrivals(station_id)
     
     arrivals = [
         a
@@ -309,7 +325,6 @@ def heuristic(station, end_station, station_lat_lon, heuristic_type):
     coord1 = station_lat_lon.get(station)
     coord2 = station_lat_lon.get(end_station)
     
-    # FIXED: Fallback if coordinates are missing to prevent TypeError
     if not coord1 or not coord2:
         return 0
 
@@ -353,7 +368,6 @@ def build_route(old_route, new_station, start_time, current_time, new_train):
                 if station_id == new_station:
                     continue
                 if arrival > current_time:
-                    # FIXED: Check if this arrival time is faster than an existing route to this station
                     current = next_route.available_stations.get(station_id)
                     if current is None or arrival < current["time"]:
                         next_route.available_stations[station_id] = {
@@ -452,10 +466,6 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
     start_time = datetime.now(timezone.utc)
     for start, end in [
-        # ("Baker Street", "Bank"),
-        # ("King's Cross St. Pancras", "Waterloo"),
-        # ("Stratford", "Victoria"),
-        # ("Canary Wharf", "Liverpool Street"), 
         ("Oxford Circus", "Wimbledon"),
     ]:
         route = main(start, end, start_time)
