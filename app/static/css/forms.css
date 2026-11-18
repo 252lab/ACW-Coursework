@@ -1,0 +1,61 @@
+/* formatting for the forms */
+
+form {
+    float: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* label formatting */
+label {
+    display: block;
+    margin-bottom: 15px;
+    flex-direction: column;
+
+}
+
+/* text and time field inputs */
+form input[type="text"],
+form input[type="time"] {
+    width: 80%;
+    padding: 10px;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+    margin-bottom: 15px;
+}
+
+/* form submit button */
+input[type=submit] {
+    background-color: darkgray;
+    border: none;
+    color: black;
+    font-family: Arial, Helvetica, sans-serif;
+    width: 30%;
+    margin-bottom: 5%;
+    padding:10px;
+}
+
+/* button hover */
+input[type=submit]:hover {
+    background-color: #6e90ff;
+}
+/* error message format*/
+.error-message {
+    display: none;
+    background-color: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #f87171;
+    border-radius: 5px;
+    padding: 12px;
+    margin-bottom: 15px;
+    width: 80%;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: left;
+}
+
+.error-message p {
+    margin: 5px 0 0;
+}
