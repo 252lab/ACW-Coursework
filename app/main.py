@@ -551,7 +551,7 @@ def route_input():
 
             # Backend called
             route = main(startLocation, endLocation, startTime)
-            string_journey = format_route(route, start_time)
+            string_journey = format_route(route, startTime)
 
             return show_route(string_journey)
 
@@ -559,61 +559,31 @@ def route_input():
              message = "Form elements cannot be retrieved."
              return error_found(message)
                     
-        return to_route()
 
 #checking if the station is valid
 # return station ID if found
 def find_station(stationName):
 
-    # check list of stations is returning stations, first element
-    # mid point of binary sort
-    # check that to match is the inputs being sent, lowercase and no spaces
-
     # converting the station name to lower case and removing any extra paces
     toMatch = stationName.lower().replace(" ", "")
-    print(toMatch)
 
-    found = False
-
-
-    # searching the array of stations fopr a match
+    # searching the array of stations for a match
     try:
-        """
-        # getting array of stations
-        listStations = sorted(list_stations())
-
-        print(listStations[0])
-        # searching the array of stations for a match
-        start = 0
-        end = len(listStations) -1
-
-        while start <= end:
-            mid = (start+end) // 2
-            midpoint = listStations[mid][0]
-
-            if midpoint > toMatch:
-                end = mid -1
-
-            elif midpoint < toMatch:
-                start = mid + 1
-            else:
-                #return the Id of the station
-                return listStations[mid][1]
-
-        # return -1 if the station could not be found
-        return -1
-        """
+        # getting the list of stations
         list_stations = list_stations()
 
+        # searching through station list for match
         for x in list_stations:
+
+            # if a match is found, return it
             if x[0] == toMatch:
                 return x[1]
-            else:
-                return -1
-        
+        # otherwise return -1 
+        return -1
 
+    # exception handling
     except:
-        message = "find_station error"
+        message = "Station not found."
         error_found(message)
 
 # function used to check if stations can be matched to API
@@ -693,7 +663,6 @@ def list_stations():
         for i in range(0, len(tube_names)):
             tube_names[i][0]= tube_names[i][0].lower().replace(" ", "")
 
-        print(tube_names)
         # returning list of stations
         return tube_names
 
