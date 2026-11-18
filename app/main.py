@@ -3,14 +3,11 @@
 import requests
 import pandas as pd
 import numpy
-import flask
-from flask_frozen import Freezer
 import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash
 from markupsafe import Markup
 
-app = Flask(__name__,template_folder="../templates")
-freezer = Freezer(app)
+app = Flask(__name__,template_folder="templates")
 
 BASE_URL = "https://api.tfl.gov.uk"
 
@@ -20,12 +17,12 @@ def index():
     return render_template("index.html")
 
 # rendering the loading page
-@app.route("/loading")
+@app.route("/")
 def loading():
     return render_template("loading.html")
 
 # rendering the route page
-@app.route("/route")
+@app.route("/")
 def route():
     return render_template("route.html")
 
@@ -284,5 +281,4 @@ def show_route(text):
 
 
 if __name__ == "__main__":
-    freezer.freeze()
-
+    app.run()
