@@ -124,6 +124,7 @@ External data and services:
 ## Team contributions
 
 - **Livia Banyai:** Back-end development (helper functions, caching), automated test suites (frontend and backend), repository maintenance (updating conftest.py, README, requirements.txt, etc.)
-- **Laura Bonnelame:**  Front-end development (html, CSS & JavaScript files), input validation (from the html form), file management and the powerpoint
+- **Laura Bonnelame:**  Front-end development (html & CSS), input validation (from the html form), file management and the powerpoint
+- **Rose Burston:** Back-end development (hueristic function, fetching train lat and lon information), team coordination
 
 **To do:** Each team member should review this summary and add any missing contributions.
