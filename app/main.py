@@ -579,6 +579,8 @@ def find_station(stationName):
         # getting the list of stations
         station_list = list_stations()
 
+        print(station_list[1])
+
         if station_list is None or len(station_list) == 0:
             return -1
 
@@ -596,8 +598,6 @@ def find_station(stationName):
             if normalised_name == toMatch:
                 return str(station_id)
 
-        # return -1 if the station could not be found
-        return -1
     
     # exception handling
     except Exception:
