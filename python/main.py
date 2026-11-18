@@ -6,6 +6,17 @@ from functools import lru_cache
 from pathlib import Path
 from geopy.distance import geodesic
 import requests
+import os
+import logging
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+from dotenv import load_dotenv
+
+load_dotenv()  # reads .env and puts its values into os.environ
+
+APP_KEY = os.environ.get("TFL_APP_KEY")
+
+logger = logging.getLogger(__name__)
 
 BASE_URL = "https://api.tfl.gov.uk"
 
@@ -20,10 +31,19 @@ STATION_NAMES = {s["naptanID"]: s["commonName"] for s in NAPTAN}
 STATION_IDS = {normalize_station_name(s["commonName"]): s["naptanID"] for s in NAPTAN}
 EST_MAX_TRAIN_SPEED = 60 # tfl says that trains can reach about 60 mph
 
+SESSION = requests.Session()
+SESSION.mount("https://", HTTPAdapter(max_retries=Retry(
+    total=4, backoff_factor=1,
+    status_forcelist=[429, 502, 503, 504],
+    respect_retry_after_header=True,
+)))
+APP_KEY = os.environ.get("TFL_APP_KEY")
+
 class Train:
     def __init__(self):
         self.line = ""
         self.direction = ""
+        self.vehicle_id = ""
         self.stops = []
 
 class Route:
@@ -52,13 +72,67 @@ def route_stations(route):
     return list(reversed(stations))
 
 
+def station_label(naptan_id):
+    """Human-readable station name for a NaPTAN ID."""
+    name = STATION_NAMES.get(naptan_id, naptan_id)
+    return name.removesuffix(" Underground Station")
+
+
+def route_times(route):
+    """Minutes from the search start at each station on the route, in path order."""
+    times = []
+    current = route
+    while current is not None:
+        times.append(current.current_time)
+        current = current.parent
+    return list(reversed(times))
+
+
+def format_route(route, start_time):
+    """Return a readable, leg-by-leg description of a completed route, with times."""
+    stations = route_stations(route)
+    times = route_times(route)
+
+    def clock(minutes):
+        return (start_time + timedelta(minutes=minutes)).astimezone().strftime("%H:%M")
+
+    # route.trains[i] is the train used to get from stations[i] to stations[i + 1].
+    # Consecutive hops on the same vehicle are merged into one leg.
+    legs = []
+    for i, train in enumerate(route.trains):
+        if legs and legs[-1]["vehicle_id"] == train.vehicle_id:
+            legs[-1]["to"] = stations[i + 1]
+            legs[-1]["arrive"] = times[i + 1]
+        else:
+            legs.append({
+                "line": train.line,
+                "vehicle_id": train.vehicle_id,
+                "from": stations[i],
+                "to": stations[i + 1],
+                "depart": times[i],
+                "arrive": times[i + 1],
+            })
+
+    lines = [
+        f"{station_label(stations[0])} → {station_label(stations[-1])}"
+        f"  (about {route.current_time} min, arriving {clock(route.current_time)})",
+        "",
+    ]
+    for n, leg in enumerate(legs, start=1):
+        if n > 1:
+            lines.append(f"   Change at {station_label(leg['from'])}")
+        lines.append(
+            f"{n}. {leg['line']} line: "
+            f"{clock(leg['depart'])} {station_label(leg['from'])} → "
+            f"{clock(leg['arrive'])} {station_label(leg['to'])}"
+        )
+    return "\n".join(lines)
+
+
 def get_json(path):
-    """
-    Fetch BASE_URL + path and return the JSON response.
-    Raise requests.exceptions.RequestException for any request errors.
-    """
-    response = requests.get(f"{BASE_URL}{path}", timeout=10)
-    response.raise_for_status()  # Raise an error for bad responses
+    params = {"app_key": APP_KEY} if APP_KEY else None
+    response = SESSION.get(f"{BASE_URL}{path}", params=params, timeout=10)
+    response.raise_for_status()
     return response.json()
 
 """ Fetches the stations long and lats from a csv file
@@ -155,7 +229,7 @@ def get_timetable(line_id, from_id, to_id):
 
 def get_trains(station, start_time, arrival_time, minutes=30):
     station_id = get_station_id(station)
-    print("station id is " + station_id)
+    logger.debug("Fetching arrivals for %s", station_id)
     end_time = arrival_time + timedelta(minutes=minutes)
     arrivals = get_json(f"/StopPoint/{station_id}/Arrivals")
     # Filter arrivals
@@ -170,11 +244,11 @@ def get_trains(station, start_time, arrival_time, minutes=30):
     ]
     if not arrivals:
         return []
-    print("there are " + str(len(arrivals)) + " arrivals")
+    logger.debug("%d arrivals in window at %s", len(arrivals), station_id)
     trains = []
     # Get unique vehicles
     vehicle_ids = list(set(a["vehicleId"] for a in arrivals))
-    print("there are " + str(len(vehicle_ids)) + " vehicle ids")
+    logger.debug("%d unique vehicle ids", len(vehicle_ids))
     predictions = get_vehicle_predictions(vehicle_ids)
     # Group predictions by vehicle
     vehicles = {}
@@ -185,8 +259,7 @@ def get_trains(station, start_time, arrival_time, minutes=30):
     # Create train objects independently of whether vehicle predictions exist.
     for arrival in arrivals:
         if not arrival.get("destinationNaptanId"):
-            print("Missing destinationNaptanId: ")
-            print(arrival)
+            logger.debug("Skipping arrival with no destinationNaptanId: %s", arrival)
             continue
 
         expected_str = arrival.get("expectedArrival")
@@ -209,6 +282,7 @@ def get_trains(station, start_time, arrival_time, minutes=30):
         t = Train()
         t.line = arrival.get("lineName", "")
         t.direction = arrival.get("direction", "")
+        t.vehicle_id = vehicle_id
         station_groups = get_station_order(timetable)
 
         for group in station_groups:
@@ -237,13 +311,11 @@ def get_trains(station, start_time, arrival_time, minutes=30):
                         stops[prediction_station] = predicted_minutes
 
         trains.append(t)
-    for t in trains:
-        print("\nLine:", t.line)
-        print("Direction:", t.direction)
-
-        for i, stops in enumerate(t.stops):
-            print(f"Interval group {i}:")
-            print(stops)
+    if logger.isEnabledFor(logging.DEBUG):
+        for t in trains:
+            logger.debug("Train: %s %s (%s)", t.line, t.direction, t.vehicle_id)
+            for i, stops in enumerate(t.stops):
+                logger.debug("  interval group %d: %s", i, stops)
     return trains
 
 
@@ -357,7 +429,7 @@ def astar_step(
                     }
 
     if not candidate_stations:
-        print("No available stations to explore. Ending search.")
+        logger.info("No available stations to explore. Ending search.")
         return None, None
 
     # for each of the shortest_routes, find the potential time to the new station, and add the heuristic value for that station. Then select the station with the lowest total time.
@@ -415,21 +487,22 @@ def main(start_station, end_station, start_time):
         explored_routes.append(next_route)
         explored_stations.append(next_station)
         if next_route.route_complete:
-            print(next_route)
+            logger.debug("Route complete: %s", route_stations(next_route))
             route_found = True
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")  # DEBUG for detail
     start_time = datetime.now(timezone.utc)
     for start, end in [
-        ("Baker Street", "Bank"),
+        # ("Baker Street", "Bank"),
         # ("King's Cross St. Pancras", "Waterloo"),
         # ("Stratford", "Victoria"),
         # ("Canary Wharf", "Liverpool Street"),
-        # ("Oxford Circus", "Wimbledon"),
+        ("Oxford Circus", "Wimbledon"),
     ]:
         route = main(start, end, start_time)
         if route is None:
             print(f"No route found from {start} to {end}.")
         else:
-            print(f"Route from {start} to {end}: {route_stations(route)}")
+            print(format_route(route, start_time))
