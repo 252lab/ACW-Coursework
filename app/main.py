@@ -195,7 +195,7 @@ def get_stations_lon_lat_dictionary(
 
 
 def get_station_id(station):
-    station_str = str(station) # Fixed: defined station_str so it doesn't throw NameError
+    station_str = str(station)
     if station_str.upper().startswith("9"):
         return station_str.upper()
 
@@ -571,7 +571,7 @@ def find_station(stationName):
     # searching the array of stations for a match
     try:
         # getting the list of stations
-        station_list = list_stations() 
+        station_list = list_stations()
 
         if not station_list:
             return -1
@@ -583,8 +583,9 @@ def find_station(stationName):
             if x[0] == toMatch:
                 return x[1]
 
-        # otherwise return -1 if loop finishes without finding it
+        # return -1 if the station could not be found
         return -1
+    
     # exception handling
     except:
         message = "Station not found."
@@ -629,7 +630,7 @@ def validate_inputs(startLocation, endLocation, startTime):
     try:
         # if no time is entered, get the current time as the start time
         if (startTime == ""):
-            startTime = datetime.now(timezone.utc) # Fixed: changed datetime.datetime.now() to datetime.now(timezone.utc)
+            startTime = datetime.now(timezone.utc)
             
     except:
         # outputting error
@@ -645,33 +646,43 @@ def validate_inputs(startLocation, endLocation, startTime):
 # returning the list of stations
 def list_stations():
     
-    # filepath for csv file
-    filepath = "tfl-stationdata-detailed/Stations.csv"
+    # filepath for csv file - resolve relative to project root or app folder
+    base_dir = Path(__file__).resolve().parent
+    if (base_dir / "tfl-stationdata-detailed").exists():
+        filepath = base_dir / "tfl-stationdata-detailed" / "Stations.csv"
+    else:
+        # Check one level up if main.py is inside an app/ directory
+        filepath = base_dir.parent / "tfl-stationdata-detailed" / "Stations.csv"
 
     try:
 
         # reading from the csv file
         df = pd.read_csv(filepath)
 
+        # auto-detect column names to prevent KeyErrors
+        name_col = "Name" if "Name" in df.columns else ("CommonName" if "CommonName" in df.columns else df.columns[0])
+        id_col = "UniqueId" if "UniqueId" in df.columns else ("StationUniqueId" if "StationUniqueId" in df.columns else df.columns[1])
+
         # getting the tube stations
-        tube_stations = df[df["UniqueId"].str.startswith("940GZZLU", na=False)]
+        tube_stations = df[df[id_col].str.startswith("940GZZLU", na=False)]
 
         # converting to an array
         # data should already be ordered as it is in the csv file
-        tube_names = tube_stations[["Name", "UniqueId"]].to_numpy()
+        tube_names = tube_stations[[name_col, id_col]].to_numpy()
 
 
         # making the staion names lowercase and removing any spaces
         # for easier searching
         for i in range(0, len(tube_names)):
-            tube_names[i][0]= tube_names[i][0].lower().replace(" ", "")
+            tube_names[i][0]= str(tube_names[i][0]).lower().replace(" ", "")
 
         # returning list of stations
         return tube_names
 
-    except:
-        message = "Couldn't retrive list of stations in network network."
-        error_found(message)
+    except Exception as e:
+        print(f"Error in list_stations: {e}")
+        message = "Couldn't retrive list of stations in network."
+        return error_found(message)
 
 
 # outputs the error message
