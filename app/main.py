@@ -572,15 +572,16 @@ def find_station(stationName):
         # getting the list of stations
         list_stations = list_stations()
 
-        # searching through station list for match
+        # searching through list of stations
         for x in list_stations:
 
-            # if a match is found, return it
+            # returning station if found
             if x[0] == toMatch:
                 return x[1]
-        # otherwise return -1 
-        return -1
 
+            # otherwise return -1
+            else:
+                return -1
     # exception handling
     except:
         message = "Station not found."
