@@ -19,21 +19,21 @@ BASE_URL = "https://api.tfl.gov.uk"
 
 # rendering the starting page
 @app.route("/")
-def index():
+def index_page():
     return render_template("index.html")
 
 # rendering the route page
-@app.route("/")
-def route():
+@app.route("/route")
+def route_page():
     return render_template("route.html")
 
 #switching to index page
 def to_index():
-    return redirect(url_for('index'))
+    return redirect(url_for('index_page'))
 
 # switching to route page
 def to_route():
-    return redirect(url_for('route'))
+    return redirect(url_for('route_page'))
 
 
 def get_json(path):
