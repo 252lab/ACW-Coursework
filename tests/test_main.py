@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import pytest
 import requests
 
-from python.main import (
+from app.main import (
     Train,
     _get_routes_for_line_cached,
     astar_step,
