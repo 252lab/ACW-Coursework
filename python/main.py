@@ -37,7 +37,6 @@ SESSION.mount("https://", HTTPAdapter(max_retries=Retry(
     status_forcelist=[429, 502, 503, 504],
     respect_retry_after_header=True,
 )))
-APP_KEY = os.environ.get("TFL_APP_KEY")
 
 class Train:
     def __init__(self):
@@ -96,8 +95,6 @@ def format_route(route, start_time):
     def clock(minutes):
         return (start_time + timedelta(minutes=minutes)).astimezone().strftime("%H:%M")
 
-    # route.trains[i] is the train used to get from stations[i] to stations[i + 1].
-    # Consecutive hops on the same vehicle are merged into one leg.
     legs = []
     for i, train in enumerate(route.trains):
         if legs and legs[-1]["vehicle_id"] == train.vehicle_id:
@@ -141,31 +138,26 @@ def get_json(path):
     {String: (float,float)}
     """
 def get_stations_lon_lat_dictionary(
+
     station_coord_csv=Path(__file__).resolve().parent.parent
     / "tfl-stationdata-detailed"
     / "StationPoints.csv",
 ):
-    # load the csv file
     points = pd.read_csv(station_coord_csv)
-
-    # filter for tube stations using NapTan
     tube_points = points[points["StationUniqueId"].str.startswith("940GZZLU", na=False)]
-
-    # remove duplicates
     unique_points = tube_points.drop_duplicates(subset=["StationUniqueId"])
 
-    # convert to dictionary
     coord_dict = {}
     for _, row in unique_points.iterrows():
         naptan = row["StationUniqueId"]
         lat = row["Lat"]
         lon = row["Lon"]
-        coord_dict[naptan] = (lat,lon)
+        coord_dict[naptan] = (lat, lon)
 
     return coord_dict
 
+
 def get_station_id(station):
-    # Allow NAPTAN IDs directly.
     station_str = str(station)
     if station_str.upper().startswith("9"):
         return station_str.upper()
@@ -181,9 +173,7 @@ def get_station_id(station):
     raise ValueError(f"Station not found: {station}")
 
 
-def get_vehicle_predictions(
-    vehicle_ids,
-):  # some trains have vehicle ids that track their jouneys(not all). this function gets the timetable for those trains
+def get_vehicle_predictions(vehicle_ids):
     predictions = []
     for i in range(0, len(vehicle_ids), 25):
         ids = ",".join(vehicle_ids[i : i + 25])
@@ -192,14 +182,11 @@ def get_vehicle_predictions(
     return predictions
 
 
-def calculate_times(start_time, scheduled, live):  # combines live predictions and timetables
+def calculate_times(start_time, scheduled, live):
     result = {}
     for station, scheduled_time in scheduled.items():
-        if station in live:
-            arrival = live[station]
-        else:
-            arrival = scheduled_time
-            result[station] = round((arrival - start_time).total_seconds() / 60)
+        arrival = live.get(station, scheduled_time)
+        result[station] = round((arrival - start_time).total_seconds() / 60)
     return result
 
 
@@ -218,13 +205,12 @@ def get_station_order(timetable):
 
 @lru_cache(maxsize=None)
 def get_timetable(line_id, from_id, to_id):
-    """Fetch a line timetable once. Returns None if TfL has no valid timetable for this combination."""
     try:
         return get_json(f"/Line/{line_id}/Timetable/{from_id}/to/{to_id}")
     except requests.exceptions.HTTPError as e:
         if e.response is not None and e.response.status_code == 429:
-            raise  # rate limited: don't cache a failure for a combination that may be valid
-        return None  # 404/500: cache the failure so we don't ask again
+            raise
+        return None
 
 
 def get_trains(station, start_time, arrival_time, minutes=30):
@@ -232,7 +218,7 @@ def get_trains(station, start_time, arrival_time, minutes=30):
     logger.debug("Fetching arrivals for %s", station_id)
     end_time = arrival_time + timedelta(minutes=minutes)
     arrivals = get_json(f"/StopPoint/{station_id}/Arrivals")
-    # Filter arrivals
+    
     arrivals = [
         a
         for a in arrivals
@@ -244,22 +230,20 @@ def get_trains(station, start_time, arrival_time, minutes=30):
     ]
     if not arrivals:
         return []
+    
     logger.debug("%d arrivals in window at %s", len(arrivals), station_id)
     trains = []
-    # Get unique vehicles
     vehicle_ids = list(set(a["vehicleId"] for a in arrivals))
-    logger.debug("%d unique vehicle ids", len(vehicle_ids))
     predictions = get_vehicle_predictions(vehicle_ids)
-    # Group predictions by vehicle
+    
     vehicles = {}
     for p in predictions:
         vehicle_id = p.get("vehicleId")
         if vehicle_id:
             vehicles.setdefault(vehicle_id, []).append(p)
-    # Create train objects independently of whether vehicle predictions exist.
+
     for arrival in arrivals:
         if not arrival.get("destinationNaptanId"):
-            logger.debug("Skipping arrival with no destinationNaptanId: %s", arrival)
             continue
 
         expected_str = arrival.get("expectedArrival")
@@ -270,7 +254,6 @@ def get_trains(station, start_time, arrival_time, minutes=30):
 
         vehicle_id = arrival["vehicleId"]
 
-        # Fetch the (cached) timetable first so we don't build a Train we then discard.
         timetable = get_timetable(
             arrival["lineId"],
             arrival["naptanId"],
@@ -291,7 +274,6 @@ def get_trains(station, start_time, arrival_time, minutes=30):
                 stops[name] = actual_arrival_mins + offset
             t.stops.append(stops)
 
-        # Add live predictions for this vehicle only.
         for prediction in vehicles.get(vehicle_id, []):
             prediction_station = prediction.get("naptanId")
             if prediction_station:
@@ -311,41 +293,32 @@ def get_trains(station, start_time, arrival_time, minutes=30):
                         stops[prediction_station] = predicted_minutes
 
         trains.append(t)
-    if logger.isEnabledFor(logging.DEBUG):
-        for t in trains:
-            logger.debug("Train: %s %s (%s)", t.line, t.direction, t.vehicle_id)
-            for i, stops in enumerate(t.stops):
-                logger.debug("  interval group %d: %s", i, stops)
     return trains
 
 
 @lru_cache(maxsize=22)
 def _get_routes_for_line_cached(line_id: str, direction: str) -> tuple[tuple[str, ...], ...]:
-    """Cache the mostly static route sequences for each line and direction."""
     response = get_json(f"/Line/{line_id}/Route/Sequence/{direction}")
     ordered_line_routes = response.get("orderedLineRoutes", [])
     return tuple(tuple(route.get("naptanIds", [])) for route in ordered_line_routes)
 
+
 def heuristic(station, end_station, station_lat_lon, heuristic_type):
-    """
-    Heuristic calculated assuming input is two tuples of lat and lons
-    starting station (lat,lon)
-    ending station (lat, lon)
-    """
     if heuristic_type == "dijkstra":
         return 0
     coord1 = station_lat_lon.get(station)
     coord2 = station_lat_lon.get(end_station)
-    # Find the Eueclidian distance
-    dist_miles = geodesic(coord1, coord2).miles
+    
+    # FIXED: Fallback if coordinates are missing to prevent TypeError
+    if not coord1 or not coord2:
+        return 0
 
-    # Find the hueristic, distance divided by estimate max possible speed of train
-    heuristic = (dist_miles / EST_MAX_TRAIN_SPEED)*60
-    return heuristic
+    dist_miles = geodesic(coord1, coord2).miles
+    heuristic_val = (dist_miles / EST_MAX_TRAIN_SPEED) * 60
+    return heuristic_val
 
 
 def init_route(start_station, start_time):
-    """Create the initial route and populate it with departures from its start station."""
     initial_route = Route(start_station, 0)
     trains = get_trains(start_station, start_time, start_time)
 
@@ -373,14 +346,16 @@ def build_route(old_route, new_station, start_time, current_time, new_train):
     next_route.parent = old_route
     arrival_time = start_time + timedelta(minutes=current_time)
     available_trains = get_trains(new_station, start_time, arrival_time)
-    # Find available stations
+    
     for train in available_trains:
         for group in train.stops:
             for station_id, arrival in group.items():
                 if station_id == new_station:
                     continue
                 if arrival > current_time:
-                    if station_id not in next_route.available_stations:
+                    # FIXED: Check if this arrival time is faster than an existing route to this station
+                    current = next_route.available_stations.get(station_id)
+                    if current is None or arrival < current["time"]:
                         next_route.available_stations[station_id] = {
                             "time": arrival,
                             "train": train,
@@ -396,36 +371,24 @@ def astar_step(
     station_lat_lon,
     heuristic_type="dijkstra",
 ):
-    # Explored ruotes is a list of Route Objects
-    # Explored_stations is string list of station names
-
     time_to_change = 5
     candidate_stations = {}
     for current_route in explored_routes:
         for station, details in current_route.available_stations.items():
-            # Does this fetch a station name as a string, is details the arrival time?
-
             if station not in explored_stations:
                 potential_time = details["time"]
-                # Check if the train arriving at this station is different from the train we were previously on
                 if current_route.parent is not None:
-                    # Compare the current train to the train used in the parent route
                     previous_train = current_route.current_trains[-1] if current_route.current_trains else None
                     current_train = details["train"]
                     
-                    # Compare vehicle IDs, not Train objects: get_trains creates new Train
-                    # objects on every call, so the same vehicle is never the same object.
                     if previous_train is None or previous_train.vehicle_id != current_train.vehicle_id:
-                        potential_time += time_to_change  # Only add 5 mins if it's a transfer
+                        potential_time += time_to_change
                 if (
                     station not in candidate_stations
                     or potential_time < candidate_stations[station]["time"]
                 ):
-                    ## This seems to add a new available station if it is not seen
-                    ## or update the station route with the new best potential time
-                    ## adding the route (station information ect.) to it
                     candidate_stations[station] = {
-                        "time": potential_time, # how can we know what time it will stop there, as change time is added
+                        "time": potential_time,
                         "train": details["train"],
                         "route": current_route,
                     }
@@ -434,16 +397,11 @@ def astar_step(
         logger.info("No available stations to explore. Ending search.")
         return None, None
 
-    # for each of the shortest_routes, find the potential time to the new station, and add the heuristic value for that station. Then select the station with the lowest total time.
-    potential_times = {}  # a dictionary where the key is the next station and the value is the predicted time to travel to it
-    # iterate through the shortest_routes and calculate the total time for each station
+    potential_times = {}
     for station in candidate_stations:
-        # calculate the potential time to the new station and add the heuristic value for that station
         potential_time = candidate_stations[station]["time"]
-        # FIX: measure distance from the candidate station to the end station
         heuristic_value = heuristic(station, end_station, station_lat_lon, heuristic_type)
         total_time = potential_time + heuristic_value
-        # add the total_time to the potential_times dictionary, with the key as potential next station
         potential_times[station] = total_time
 
     new_station = min(potential_times, key=potential_times.get)
@@ -454,14 +412,12 @@ def astar_step(
         start_time,
         candidate_stations[new_station]["time"],
         candidate_stations[new_station]["train"],
-
     )
 
     return next_route, new_station
 
 
 def main(start_station, end_station, start_time):
-    # Keep station identifiers consistent with the NAPTAN IDs from TfL data.
     start_station = get_station_id(start_station)
     end_station = get_station_id(end_station)
 
@@ -469,7 +425,6 @@ def main(start_station, end_station, start_time):
     if not initial_route.available_stations:
         return None
 
-    # Get station lat and lon in dictionary {NapTan: (lat,lon)}
     station_lat_lon = get_stations_lon_lat_dictionary()
 
     route_found = False
@@ -494,13 +449,13 @@ def main(start_station, end_station, start_time):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")  # DEBUG for detail
+    logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
     start_time = datetime.now(timezone.utc)
     for start, end in [
         # ("Baker Street", "Bank"),
         # ("King's Cross St. Pancras", "Waterloo"),
         # ("Stratford", "Victoria"),
-        # ("Canary Wharf", "Liverpool Street"),
+        # ("Canary Wharf", "Liverpool Street"), 
         ("Oxford Circus", "Wimbledon"),
     ]:
         route = main(start, end, start_time)
