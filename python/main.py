@@ -92,7 +92,7 @@ def route_times(route):
 
 
 def format_route(route, start_time):
-    """Return a readable, leg-by-leg description of a completed route, with times."""
+    """Return a readable, leg-by-leg description of a completed route, with times and switchover duration."""
     stations = route_stations(route)
     times = route_times(route)
 
@@ -121,7 +121,9 @@ def format_route(route, start_time):
     ]
     for n, leg in enumerate(legs, start=1):
         if n > 1:
-            lines.append(f"   Change at {station_label(leg['from'])}")
+            prev_leg = legs[n - 2]
+            transfer_wait = leg["depart"] - prev_leg["arrive"]
+            lines.append(f"   Change at {station_label(leg['from'])} (wait {transfer_wait} min)")
         lines.append(
             f"{n}. {leg['line']} line: "
             f"{clock(leg['depart'])} {station_label(leg['from'])} → "
@@ -470,8 +472,8 @@ if __name__ == "__main__":
     start_time = datetime.now(timezone.utc)
     for start, end in [
         # ("Oxford Circus", "Green Park"),  # Shorter test route to confirm smooth performance
-        ("King's Cross St. Pancras", "Waterloo"),
-        # ("Stratford", "Victoria"),
+        # ("King's Cross St. Pancras", "Waterloo"),
+        ("Stratford", "Victoria"),
     ]:
         print(f"\nFinding route from {start} to {end}...")
         route = main(start, end, start_time)
