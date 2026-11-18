@@ -108,10 +108,9 @@ def route_input():
             startLocation, endLocation, startTime, endTime = validate_inputs(startLocation, endLocation, startTime, endTime)
 
             #TODO - BACKEND STARTS HERE!!!!
-            return to_index()
+            return to_route()
 
         except:
-             
              message = "Form elements cannot be retrieved."
              return error_found(message)
 
@@ -120,9 +119,6 @@ def route_input():
 # function used to check if stations can be matched to API - TODO
 # also checks that the user has only entered one of the start and end time
 def validate_inputs(startLocation, endLocation, startTime, endTime):
-
-    # variable to check if the inputs are valid
-    validInputs = True
 
     # assigning variables
     startID = ""
@@ -133,11 +129,9 @@ def validate_inputs(startLocation, endLocation, startTime, endTime):
         # check if start station and end station can be found in the API/data
         if (startLocation.strip().lower() == endLocation.strip().lower()):
 
-            # the inputs are invalid
             # output an error message about this
-            validInputs = False
             message = "Please enter two different stations."
-            error_found(message)
+            return error_found(message)
 
         else:
 
@@ -148,50 +142,38 @@ def validate_inputs(startLocation, endLocation, startTime, endTime):
             #if either id is -1, it cannot be found
             if (startID == -1 or endID == -1):
 
-                # therefore the input must be invalid
-                validInputs = False
-
                 # output the error message
                 message = "One or both of your stations could not be found."
-                error_found(message)
+                return error_found(message)
 
     except:
         # if exception is raised, assume something is wrong with inputs
-        validInputs = False
         message = "Couldn't validate station inputs."
-        error_found(message)
+        return error_found(message)
     
     # validating time inputs
     try:
         # if both times are entered, output an error message
         if (startTime != "" and endTime != ""):
-            # inputs are invalid
-            validInputs = False
 
             # outputting error message
             message = "Please only enter either the start time or end time."
-            error_found(message)
+            return error_found(message)
 
         # if no time is entered, get the current time as the start time
         elif (startTime == "" and endTime == ""):
             startTime = datetime.datetime.now()
             
     except:
-        # inputs must be invalid
-        validInputs = False
-
         # outputting error
         message = "Couldn't validate time inputs."
-        error_found(message)
+        return error_found(message)
 
     # if all the inputs thaty have been entered are valid
-    if validInputs:
-        # returning the validated inputs
-        return startID, endID, startTime, endTime
-    else:
-        # catch the error
-        message = "Something went wrong."
-        error_found(message)
+
+    # returning the validated inputs
+    return startID, endID, startTime, endTime
+
 
 #checking if the station is valid
 # return station ID if found
