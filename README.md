@@ -123,16 +123,7 @@ External data and services:
 
 ## Team contributions
 
-## Running tests
-
-Install the development dependencies and Chromium once, then run the test suite:
-
-```bash
-pip install -r requirements.txt
-playwright install chromium
-pytest
-```
-
-## Data sources
+- **Livia Banyai:** Back-end development (helper functions, caching), automated test suites (frontend and backend), repository maintenance (updating conftest.py, README, requirements.txt, etc.)
+- **Laura Bonnelame:**  Front-end development (html, CSS & JavaScript files), input validation (from the html form), file management and the powerpoint
 
 **To do:** Each team member should review this summary and add any missing contributions.
