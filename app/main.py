@@ -565,31 +565,43 @@ def route_input():
 # return station ID if found
 def find_station(stationName):
 
-    # converting the station name to lower case and removing any extra paces
-    toMatch = stationName.lower().replace(" ", "")
+    # converting the station name to lower case and removing any extra paces    
+    toMatch = (
+        str(stationName)
+        .strip()
+        .lower()
+        .replace("’", "'")
+        .replace(" ", "")
+    )
 
     # searching the array of stations for a match
     try:
         # getting the list of stations
         station_list = list_stations()
 
-        if not station_list:
+        if station_list is None or len(station_list) == 0:
             return -1
 
         # searching through list of stations
-        for x in station_list:
+        for name, station_id in station_list:
+            normalised_name = (
+                str(name)
+                .strip()
+                .lower()
+                .replace("’", "'")
+                .replace(" ", "")
+            )
 
             # returning station if found
-            if x[0] == toMatch:
-                return x[1]
+            if normalised_name == toMatch:
+                return str(station_id)
 
         # return -1 if the station could not be found
         return -1
     
     # exception handling
-    except:
-        message = "Station not found."
-        error_found(message)
+    except Exception:
+        return -1
 
 # function used to check if stations can be matched to API
 # also checks that the user has only entered one of the start and end time
