@@ -1,4 +1,4 @@
-# ECM3428 — London Route Planner
+# ECM3428 — London Tube Route Planner
 
 The project is focused on developing a route-planning website for journeys in London, using the A* algorithm.
 
@@ -120,6 +120,8 @@ External data and services:
 - Route-journey tests currently fail because of that CSV path; the two faster-route test functions are placeholders.
 - The current website is a prototype; document the completed user workflow and backend integration when available.
 - Supported modes (Underground, bus, or both) need confirmation.
+- The program currently only works for one repetitions.
+- The program cannot stop finding route halfway through safely.
 
 ## Team contributions
 
