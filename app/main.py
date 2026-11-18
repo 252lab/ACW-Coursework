@@ -6,8 +6,14 @@ import numpy
 import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash
 from markupsafe import Markup
+import secrets
+
 
 app = Flask(__name__,template_folder="templates")
+
+# generating secret key
+secret_key = secrets.token_hex(16)
+app.config['SECRET_KEY'] = secret_key
 
 BASE_URL = "https://api.tfl.gov.uk"
 
