@@ -5,12 +5,13 @@ import requests
 
 from app.main import (
     Train,
+    Route,
     _get_routes_for_line_cached,
-    astar_step,
+    get_station_order,
+    heuristic,
     get_json,
     get_station_id,
     get_trains,
-    init_route,
     main,
     route_stations,
 )
@@ -243,6 +244,31 @@ def test_main_normalizes_station_names_to_ids(monkeypatch):
     assert route is not None
     assert route.route_complete
     assert route_stations(route) == [start_id, end_id]
+
+
+def test_main_returns_none_when_destination_is_unreachable(monkeypatch):
+    trains = make_fake_get_trains({
+        "Start": [
+            {
+                "line": "Red",
+                "stops": {"DeadEnd": 5},
+            }
+        ],
+    })
+
+    monkeypatch.setattr(
+        "app.main.get_station_id",
+        lambda station: station,
+    )
+    monkeypatch.setattr("app.main.get_trains", trains)
+    monkeypatch.setattr(
+        "app.main.get_stations_lon_lat_dictionary",
+        lambda: {},
+    )
+
+    route = main("Start", "End", START_TIME)
+
+    assert route is None
 
 
 @pytest.mark.endtoend
