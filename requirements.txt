@@ -1,4 +1,17 @@
-requests==2.32.3
+# back end
+geopy==2.5.0
 pandas==2.2.3
-pytest==7.4.2
+
+# linting
+ruff==0.8.3
+black==24.3.0
+flake8==7.0.0
+isort==5.12.0
+
+# testing
+pytest==8.3.3
 playwright==1.44.0
+requests==2.32.3
+
+# putting the front and back ends together
+Flask==3.0.3

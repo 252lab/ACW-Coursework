@@ -7,8 +7,10 @@ INDEX_URL = (
     Path(__file__).resolve().parents[1] / "app" / "templates" / "index.html"
 ).as_uri()
 
-
 class Homepage:
+    '''
+    This class creates a representation of the Loading page, so that the tests use the Page Object Model.
+    '''
     def __init__(self, page: Page) -> None:
         self.page = page
         self.heading = page.locator("h1")
