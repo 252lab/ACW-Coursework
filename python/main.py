@@ -393,19 +393,24 @@ def astar_step(
     for current_route in explored_routes:
         for station, details in current_route.available_stations.items():
             if station not in explored_stations:
-                potential_time = details["time"]
+                train_arrival_time = details["time"]
+                effective_ready_time = train_arrival_time
+
+                # Check if it's a transfer
                 if current_route.parent is not None:
                     previous_train = current_route.current_trains[-1] if current_route.current_trains else None
                     current_train = details["train"]
                     
                     if previous_train is None or previous_train.vehicle_id != current_train.vehicle_id:
-                        potential_time += time_to_change
+                        effective_ready_time += time_to_change  # Add 5 mins transfer penalty for boarding the next train
+
                 if (
                     station not in candidate_stations
-                    or potential_time < candidate_stations[station]["time"]
+                    or effective_ready_time < candidate_stations[station]["time"]
                 ):
                     candidate_stations[station] = {
-                        "time": potential_time,
+                        "time": train_arrival_time,          # Keep original train arrival time for the station
+                        "ready_time": effective_ready_time,  # When we are actually ready to depart/catch a connection
                         "train": details["train"],
                         "route": current_route,
                     }
@@ -416,18 +421,18 @@ def astar_step(
 
     potential_times = {}
     for station in candidate_stations:
-        potential_time = candidate_stations[station]["time"]
-        heuristic_value = heuristic(station, end_station, station_lat_lon, heuristic_type)
-        total_time = potential_time + heuristic_value
-        potential_times[station] = total_time
+        # Use the ready_time to calculate total score for A* priority
+        total_time_score = candidate_stations[station]["ready_time"] + heuristic(station, end_station, station_lat_lon, heuristic_type)
+        potential_times[station] = total_time_score
 
     new_station = min(potential_times, key=potential_times.get)
 
+    # Build the next route using the ready_time so the next train search starts *after* the transfer window
     next_route = build_route(
         candidate_stations[new_station]["route"],
         new_station,
         start_time,
-        candidate_stations[new_station]["time"],
+        candidate_stations[new_station]["ready_time"],
         candidate_stations[new_station]["train"],
     )
 
