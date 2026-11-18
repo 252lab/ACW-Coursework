@@ -76,7 +76,6 @@ def route_input():
     startLocation = ""
     endLocation = ""
     startTime = ""
-    endTime = ""
 
     # if the form request method is post
     if request.method=="POST":
@@ -90,10 +89,9 @@ def route_input():
 
             # default is an empty string if no input for the time
             startTime = request.form.get("startTime", "").strip()
-            endTime = request.form.get("endTime", "").strip()
-            
+
             # call function to validate inputs (and update then when necessary)
-            startLocation, endLocation, startTime, endTime = validate_inputs(startLocation, endLocation, startTime, endTime)
+            startLocation, endLocation, startTime = validate_inputs(startLocation, endLocation, startTime)
 
             #TODO - BACKEND STARTS HERE!!!!
 
@@ -107,7 +105,7 @@ def route_input():
 
 # function used to check if stations can be matched to API - TODO
 # also checks that the user has only entered one of the start and end time
-def validate_inputs(startLocation, endLocation, startTime, endTime):
+def validate_inputs(startLocation, endLocation, startTime):
 
     # assigning variables
     startID = ""
@@ -142,15 +140,8 @@ def validate_inputs(startLocation, endLocation, startTime, endTime):
     
     # validating time inputs
     try:
-        # if both times are entered, output an error message
-        if (startTime != "" and endTime != ""):
-
-            # outputting error message
-            message = "Please only enter either the start time or end time."
-            return error_found(message)
-
         # if no time is entered, get the current time as the start time
-        elif (startTime == "" and endTime == ""):
+        if (startTime == ""):
             startTime = datetime.datetime.now()
             
     except:
@@ -161,7 +152,7 @@ def validate_inputs(startLocation, endLocation, startTime, endTime):
     # if all the inputs thaty have been entered are valid
 
     # returning the validated inputs
-    return startID, endID, startTime, endTime
+    return startID, endID, startTime
 
 
 #checking if the station is valid

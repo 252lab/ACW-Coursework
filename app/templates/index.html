@@ -9,7 +9,6 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/rectangle.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/forms.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/map.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/tabs.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/error.css') }}">
 
 <!-- header-->
@@ -44,13 +43,7 @@
                 <!-- TODO make some inputs required-->
 
                 <!-- Message about using tube stops -->
-                <p style="text-align: center; padding-top: 10px;">Please enter your start and end tube stops, and your
-                    start or end time.
-                </p>
-                <br>
-                <p style="text-align: center; padding-top: 10px;">
-                    Your start and end stops are required. Please only enter the start time or the end time, if a time
-                    is entered.
+                <p style="text-align: center; padding-top: 10px;">Please enter your start and end tube stops, and start time if required.
                 </p>
                 <br>
 
@@ -58,11 +51,11 @@
                 {% with messages = get_flashed_messages() %}
                 {% if messages %}
                 <ul class=flashes>
-                        <div style="text-align: center;" class="alert error">
-                      <!-- only getting first error as multiple errors can be triggered at the same time-->  
+                    <div style="text-align: center;" class="alert error">
+                        <!-- only getting first error as multiple errors can be triggered at the same time-->
                         {{ messages[0] }}
                         <br>
-                        </div>
+                    </div>
                 </ul>
                 {% endif %}
                 {% endwith %}
@@ -86,36 +79,11 @@
                     <input type="text" id="endLocation" name="endLocation" required>
                     <br>
 
-                    <!-- entering start and end times-->
-                    <!-- the user can only enter one or the other-->
-                    <!-- Tabs based on 
-                        https://www.w3schools.com/howto/howto_js_tabs.asp -->
+                    <!-- entering start time -->
 
-                    <!-- Tab links -->
-                    <div class="tab">
-                        <button class="tablinks" type="button" onclick="openTime(event, 'start')">Start Time</button>
-                        <button class="tablinks" type="button" onclick="openTime(event, 'end')">End Time</button>
-
-                    </div>
-
-                    <!-- Tab content -->
-                    <!-- the tab for submitting the start time of the suer's journey -->
-                    <div id="start" class="tabcontent">
-                        <label for="startTime">Start Time:</label>
-                        <input type="time" id="startTime" name="startTime">
-                        <br>
-
-                    </div>
-
-
-                    <!-- the tab for submitting the end time of the user's journey-->
-                    <div id="end" class="tabcontent">
-
-                        <label for="endTime">End Time:</label>
-                        <input type="time" id="endTime" name="endTime">
-                        <br>
-
-                    </div>
+                    <label for="startTime">Start Time:</label>
+                    <input type="time" id="startTime" name="startTime">
+                    <br>
 
                     <!-- submit button -->
                     <input type="submit" value="Submit">
