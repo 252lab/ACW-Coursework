@@ -108,10 +108,13 @@ def route_input():
             startLocation, endLocation, startTime, endTime = validate_inputs(startLocation, endLocation, startTime, endTime)
 
             #TODO - BACKEND STARTS HERE!!!!
+            return to_index()
 
         except:
+             
              message = "Form elements cannot be retrieved."
-             error_found(message)
+             return error_found(message)
+
 
 
 # function used to check if stations can be matched to API - TODO
@@ -265,7 +268,7 @@ def list_stations():
 # and returns to the index page
 def error_found(message):
     flash(message, 'error')
-    return redirect(url_for('index'))
+    return to_index()
 
 # displaying the outputted route
 def show_route(text):
