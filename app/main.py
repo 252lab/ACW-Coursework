@@ -22,11 +22,6 @@ BASE_URL = "https://api.tfl.gov.uk"
 def index():
     return render_template("index.html")
 
-# rendering the loading page
-@app.route("/")
-def loading():
-    return render_template("loading.html")
-
 # rendering the route page
 @app.route("/")
 def route():
@@ -35,10 +30,6 @@ def route():
 #switching to index page
 def to_index():
     return redirect(url_for('index'))
-
-# switching to loading page
-def to_loading():
-    return redirect(url_for('loading'))
 
 # switching to route page
 def to_route():
@@ -81,9 +72,6 @@ inputs. If the inputs are valid, they will then be sent to the algorithm.
 @app.route("/route_input", methods=["POST"])
 def route_input():
 
-    # switching to loading page while back end is running
-    to_loading()
-
     # initialising input variables
     startLocation = ""
     endLocation = ""
@@ -108,11 +96,12 @@ def route_input():
             startLocation, endLocation, startTime, endTime = validate_inputs(startLocation, endLocation, startTime, endTime)
 
             #TODO - BACKEND STARTS HERE!!!!
-            return to_route()
 
         except:
              message = "Form elements cannot be retrieved."
              return error_found(message)
+                    
+        return to_route()
 
 
 
