@@ -1,0 +1,21 @@
+/* formatting the background rectangle element */
+.rectangle {
+    width: 90%;
+    background-color: white;
+    border-radius: 50px;
+    position: relative;
+    display: block;
+    justify-content: center;
+    box-sizing: border-box;
+    padding-left: 5%;
+    padding-right: 5%;
+    flex-direction: column;
+
+}
+
+/* centering the rectangle on mobile views */
+@media (max-width: 950px) {
+    .rectangle {
+        margin: 0 auto;
+    }
+}

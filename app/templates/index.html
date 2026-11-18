@@ -1,0 +1,116 @@
+<!-- Starting webpage -->
+<!-- importing character set-->
+<meta charset="UTF-8">
+
+<!-- importing css pages-->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/columns.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/padding.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/rectangle.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/forms.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/map.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/error.css') }}">
+
+<!-- header-->
+
+<head style="font-family: Arial, Helvetica, sans-serif; background-color: #5C6BC0;">
+
+    <!-- adding padding -->
+    <br>
+    <br>
+
+    <!-- meta tags for formatting-->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <h1 style="color: white; text-align: center; padding: 5px; "> London Tube Route Planner</h1>
+</head>
+
+<!-- main body of the webpage-->
+<!-- linking to js file-->
+<script src="{{ url_for('static', filename='javascript/tabs.js') }}"></script>
+
+<body style="font-family: Arial, Helvetica, sans-serif; background-color: #5C6BC0;">
+
+    <br>
+    <hr class="solid" style="color: white;">
+    <br>
+
+    <div class="padding row">
+        <div class="column">
+            <div class="rectangle" style="text-align: center;">
+
+                <!-- TODO make some inputs required-->
+
+                <!-- Message about using tube stops -->
+                <p style="text-align: center; padding-top: 10px;">Please enter your start and end tube stops, and start time if required.
+                </p>
+                <br>
+
+                <!-- handing error message popups  -->
+                {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                <ul class=flashes>
+                    <div style="text-align: center;" class="alert error">
+                        <!-- only getting first error as multiple errors can be triggered at the same time-->
+                        {{ messages[0] }}
+                        <br>
+                    </div>
+                </ul>
+                {% endif %}
+                {% endwith %}
+                {% block body %}{% endblock %}
+
+                <!-- input form-->
+                <form id="routeForm" style="text-align: center;" action="{{url_for('route_input', filename='main.py')}}"
+                    method="post">
+                    <!-- Error message -->
+                    <div id="error-message" class="error-message" role="alert" style="display: none;">
+                        <strong>Error!</strong>
+                        <p id="error-text"></p>
+                    </div>
+                    <!-- entering locations-->
+                    <!-- the locations are required-->
+                    <label for="startLocation">Start Location*:</label>
+                    <input type="text" id="startLocation" name="startLocation" required>
+                    <br>
+
+                    <label for="endLocation">End Location*:</label>
+                    <input type="text" id="endLocation" name="endLocation" required>
+                    <br>
+
+                    <!-- entering start time -->
+
+                    <label for="startTime">Start Time:</label>
+                    <input type="time" id="startTime" name="startTime">
+                    <br>
+
+                    <!-- submit button -->
+                    <input type="submit" value="Submit">
+
+                </form>
+
+            </div>
+
+        </div>
+
+        <!-- the column where the map is-->
+        <div class="column">
+            <!-- centering the map-->
+            <div class="map-container">
+                <!-- importing and formatting the map-->
+                <iframe src=https://traintimes.org.uk/map/tube/ allowfullscreen="" loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
+        </div>
+    </div>
+</body>
+
+<!-- Page footer-->
+<footer>
+    <div class="footer" style="font-family: Arial, Helvetica, sans-serif; background-color: #5C6BC0;">
+        <div style="text-align: center;">
+            <p>Content copyright © 2026.</p>
+        </div>
+    </div>
+</footer>
