@@ -1,4 +1,4 @@
-# ECM3428 — London Route Planner
+# ECM3428 — London Tube Route Planner
 
 The project is focused on developing a route-planning website for journeys in London, using the A* algorithm.
 
