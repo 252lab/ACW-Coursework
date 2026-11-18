@@ -38,9 +38,9 @@ SESSION.mount("https://", HTTPAdapter(max_retries=Retry(
     respect_retry_after_header=True,
 )))
 
-# Arrival Cache: {station_id: (fetch_datetime, arrivals_json_data)}
+# Arrival Cache: {station_id: (fetch_datetime, arrivals_json_data)} to prevent API timeouts
 ARRIVAL_CACHE = {}
-ARRIVAL_CACHE_TTL_SECONDS = 30  # Cache live arrivals for 30 seconds
+ARRIVAL_CACHE_TTL_SECONDS = 30  
 
 class Train:
     def __init__(self):
@@ -143,10 +143,9 @@ def get_cached_arrivals(station_id):
     if station_id in ARRIVAL_CACHE:
         cached_time, arrivals_data = ARRIVAL_CACHE[station_id]
         if (now - cached_time).total_seconds() < ARRIVAL_CACHE_TTL_SECONDS:
-            logger.debug("Cache hit for arrivals at %s", station_id)
             return arrivals_data
 
-    logger.debug("Cache miss/expired for arrivals at %s, fetching...", station_id)
+    logger.debug("Fetching fresh live arrivals for station: %s", station_id)
     arrivals_data = get_json(f"/StopPoint/{station_id}/Arrivals")
     ARRIVAL_CACHE[station_id] = (now, arrivals_data)
     return arrivals_data
@@ -232,7 +231,7 @@ def get_trains(station, start_time, arrival_time, minutes=30):
     logger.debug("Fetching arrivals for %s", station_id)
     end_time = arrival_time + timedelta(minutes=minutes)
     
-    # Using cached arrivals wrapper here
+    # Use cached arrivals to prevent freezing/timeouts
     arrivals = get_cached_arrivals(station_id)
     
     arrivals = [
@@ -325,6 +324,7 @@ def heuristic(station, end_station, station_lat_lon, heuristic_type):
     coord1 = station_lat_lon.get(station)
     coord2 = station_lat_lon.get(end_station)
     
+    # Fallback check to prevent TypeError if coordinates are missing
     if not coord1 or not coord2:
         return 0
 
@@ -368,6 +368,7 @@ def build_route(old_route, new_station, start_time, current_time, new_train):
                 if station_id == new_station:
                     continue
                 if arrival > current_time:
+                    # Check if this arrival time is faster than an existing one
                     current = next_route.available_stations.get(station_id)
                     if current is None or arrival < current["time"]:
                         next_route.available_stations[station_id] = {
@@ -463,13 +464,18 @@ def main(start_station, end_station, start_time):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
+    # Changed logging level to INFO so we can see console progress instead of a silent freeze
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+    
     start_time = datetime.now(timezone.utc)
     for start, end in [
-        ("Oxford Circus", "Wimbledon"),
+        # ("Oxford Circus", "Green Park"),  # Shorter test route to confirm smooth performance
+        ("King's Cross St. Pancras", "Waterloo"),
+        # ("Stratford", "Victoria"),
     ]:
+        print(f"\nFinding route from {start} to {end}...")
         route = main(start, end, start_time)
         if route is None:
             print(f"No route found from {start} to {end}.")
         else:
-            print(format_route(route, start_time))
+            print("\n" + format_route(route, start_time))
