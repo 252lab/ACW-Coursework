@@ -54,7 +54,8 @@
                 <br>
 
                 <!-- input form-->
-                <form id="routeForm" style="text-align: center;" action="{{url_for('route_input', filename='main.py')}}" method="post" >
+                <form id="routeForm" style="text-align: center;" action="{{url_for('route_input', filename='main.py')}}"
+                    method="post">
                     <!-- Error message -->
                     <div id="error-message" class="error-message" role="alert" style="display: none;">
                         <strong>Error!</strong>
@@ -105,6 +106,17 @@
                     <input type="submit" value="Submit">
 
                 </form>
+
+                {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                <ul class=flashes>
+                    {% for message in messages %}
+                    <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                {% endwith %}
+                {% block body %}{% endblock %}
 
             </div>
 
