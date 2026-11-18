@@ -142,6 +142,17 @@ def get_station_order(timetable):
     return station_groups
 
 
+@lru_cache(maxsize=None)
+def get_timetable(line_id, from_id, to_id):
+    """Fetch a line timetable once. Returns None if TfL has no valid timetable for this combination."""
+    try:
+        return get_json(f"/Line/{line_id}/Timetable/{from_id}/to/{to_id}")
+    except requests.exceptions.HTTPError as e:
+        if e.response is not None and e.response.status_code == 429:
+            raise  # rate limited: don't cache a failure for a combination that may be valid
+        return None  # 404/500: cache the failure so we don't ask again
+
+
 def get_trains(station, start_time, arrival_time, minutes=30):
     station_id = get_station_id(station)
     print("station id is " + station_id)
@@ -172,7 +183,6 @@ def get_trains(station, start_time, arrival_time, minutes=30):
         if vehicle_id:
             vehicles.setdefault(vehicle_id, []).append(p)
     # Create train objects independently of whether vehicle predictions exist.
-    timetables = {}
     for arrival in arrivals:
         if not arrival.get("destinationNaptanId"):
             print("Missing destinationNaptanId: ")
@@ -186,20 +196,19 @@ def get_trains(station, start_time, arrival_time, minutes=30):
         actual_arrival_mins = round((actual_arrival_dt - start_time).total_seconds() / 60)
 
         vehicle_id = arrival["vehicleId"]
-        t = Train()
-        t.line = arrival.get("lineName", "")
-        t.direction = arrival.get("direction", "")
 
-        timetable_key = (
+        # Fetch the (cached) timetable first so we don't build a Train we then discard.
+        timetable = get_timetable(
             arrival["lineId"],
             arrival["naptanId"],
             arrival["destinationNaptanId"],
         )
-        if timetable_key not in timetables:
-            timetables[timetable_key] = get_json(
-                f"/Line/{timetable_key[0]}/Timetable/" f"{timetable_key[1]}/to/{timetable_key[2]}"
-            )
-        timetable = timetables[timetable_key]
+        if timetable is None:
+            continue
+
+        t = Train()
+        t.line = arrival.get("lineName", "")
+        t.direction = arrival.get("direction", "")
         station_groups = get_station_order(timetable)
 
         for group in station_groups:
@@ -258,8 +267,8 @@ def heuristic(station, end_station, station_lat_lon, heuristic_type):
     # Find the Eueclidian distance
     dist_miles = geodesic(coord1, coord2).miles
 
-    # Find the hueristic, distance divided by estimate max possible speed of train, then * 60 to get it in minutes
-    heuristic = (dist_miles / EST_MAX_TRAIN_SPEED) * 60
+    # Find the hueristic, distance divided by estimate max possible speed of train
+    heuristic = dist_miles / EST_MAX_TRAIN_SPEED
     return heuristic
 
 
@@ -424,4 +433,3 @@ if __name__ == "__main__":
             print(f"No route found from {start} to {end}.")
         else:
             print(f"Route from {start} to {end}: {route_stations(route)}")
-
