@@ -265,7 +265,7 @@ def list_stations():
 # and returns to the index page
 def error_found(message):
     flash(message, 'error')
-    to_index()
+    return redirect(url_for('index'))
 
 # displaying the outputted route
 def show_route(text):
@@ -284,7 +284,7 @@ def show_route(text):
     except:
         message = "Something went wrong."
         error_found(message)
-
+    
 
 if __name__ == "__main__":
     app.run(debug=True)
