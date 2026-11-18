@@ -177,7 +177,7 @@ def find_station(stationName):
     try:
 
         # getting array of stations
-        listStations = list_stations()
+        listStations = sorted(list_stations())
 
         # searching the array of stations for a match
         start = 0
