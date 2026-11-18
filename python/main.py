@@ -340,7 +340,7 @@ def heuristic(station, end_station, station_lat_lon, heuristic_type):
     dist_miles = geodesic(coord1, coord2).miles
 
     # Find the hueristic, distance divided by estimate max possible speed of train
-    heuristic = dist_miles / EST_MAX_TRAIN_SPEED
+    heuristic = (dist_miles / EST_MAX_TRAIN_SPEED)*60
     return heuristic
 
 
