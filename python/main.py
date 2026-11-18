@@ -258,8 +258,8 @@ def heuristic(station, end_station, station_lat_lon, heuristic_type):
     # Find the Eueclidian distance
     dist_miles = geodesic(coord1, coord2).miles
 
-    # Find the hueristic, distance divided by estimate max possible speed of train
-    heuristic = dist_miles / EST_MAX_TRAIN_SPEED
+    # Find the hueristic, distance divided by estimate max possible speed of train, then * 60 to get it in minutes
+    heuristic = (dist_miles / EST_MAX_TRAIN_SPEED) * 60
     return heuristic
 
 
