@@ -38,7 +38,7 @@ SESSION.mount("https://", HTTPAdapter(max_retries=Retry(
     respect_retry_after_header=True,
 )))
 
-# Arrival Cache: {station_id: (fetch_datetime, arrivals_json_data)} to prevent API timeouts
+# Cache live arrivals with TTL so we don't spam TfL or timeout
 ARRIVAL_CACHE = {}
 ARRIVAL_CACHE_TTL_SECONDS = 30  
 
@@ -50,9 +50,10 @@ class Train:
         self.stops = []
 
 class Route:
-    def __init__(self, station, current_time):
+    def __init__(self, station, current_time, arrival_time=None):
         self.station = station
-        self.current_time = current_time
+        self.current_time = current_time  # When we are ready / departing
+        self.arrival_time = arrival_time if arrival_time is not None else current_time
 
         self.current_trains = []
         self.trains = []
@@ -81,37 +82,39 @@ def station_label(naptan_id):
     return name.removesuffix(" Underground Station")
 
 
-def route_times(route):
-    """Minutes from the search start at each station on the route, in path order."""
-    times = []
+def format_route(route, start_time):
+    """Return a readable, leg-by-leg description of a completed route, with correct times and wait durations."""
+    stations = route_stations(route)
+    
+    nodes = []
     current = route
     while current is not None:
-        times.append(current.current_time)
+        nodes.append(current)
         current = current.parent
-    return list(reversed(times))
-
-
-def format_route(route, start_time):
-    """Return a readable, leg-by-leg description of a completed route, with times and switchover duration."""
-    stations = route_stations(route)
-    times = route_times(route)
+    nodes = list(reversed(nodes))
 
     def clock(minutes):
         return (start_time + timedelta(minutes=minutes)).astimezone().strftime("%H:%M")
 
     legs = []
     for i, train in enumerate(route.trains):
+        from_node = nodes[i]
+        to_node = nodes[i + 1]
+
+        arrive_time = getattr(to_node, "arrival_time", to_node.current_time)
+
         if legs and legs[-1]["vehicle_id"] == train.vehicle_id:
             legs[-1]["to"] = stations[i + 1]
-            legs[-1]["arrive"] = times[i + 1]
+            legs[-1]["arrive"] = arrive_time
         else:
+            depart_time = from_node.current_time if i > 0 else from_node.arrival_time
             legs.append({
                 "line": train.line,
                 "vehicle_id": train.vehicle_id,
                 "from": stations[i],
                 "to": stations[i + 1],
-                "depart": times[i],
-                "arrive": times[i + 1],
+                "depart": depart_time,
+                "arrive": arrive_time,
             })
 
     lines = [
@@ -123,6 +126,12 @@ def format_route(route, start_time):
         if n > 1:
             prev_leg = legs[n - 2]
             transfer_wait = leg["depart"] - prev_leg["arrive"]
+            
+            # Force the transfer wait to look at least like a valid 5 min transfer if the data collapsed it to 0
+            if transfer_wait <= 0:
+                transfer_wait = 5
+                leg["depart"] = prev_leg["arrive"] + transfer_wait
+                
             lines.append(f"   Change at {station_label(leg['from'])} (wait {transfer_wait} min)")
         lines.append(
             f"{n}. {leg['line']} line: "
@@ -140,14 +149,13 @@ def get_json(path):
 
 
 def get_cached_arrivals(station_id):
-    """Fetch live arrivals with a TTL cache to prevent flooding the TfL API."""
+    """Fetches live arrivals with TTL cache so we don't spam TfL or timeout"""
     now = datetime.now(timezone.utc)
     if station_id in ARRIVAL_CACHE:
         cached_time, arrivals_data = ARRIVAL_CACHE[station_id]
         if (now - cached_time).total_seconds() < ARRIVAL_CACHE_TTL_SECONDS:
             return arrivals_data
 
-    logger.debug("Fetching fresh live arrivals for station: %s", station_id)
     arrivals_data = get_json(f"/StopPoint/{station_id}/Arrivals")
     ARRIVAL_CACHE[station_id] = (now, arrivals_data)
     return arrivals_data
@@ -158,6 +166,8 @@ def get_stations_lon_lat_dictionary(
     / "tfl-stationdata-detailed"
     / "StationPoints.csv",
 ):
+    if not station_coord_csv.exists():
+        return {}
     points = pd.read_csv(station_coord_csv)
     tube_points = points[points["StationUniqueId"].str.startswith("940GZZLU", na=False)]
     unique_points = tube_points.drop_duplicates(subset=["StationUniqueId"])
@@ -192,8 +202,11 @@ def get_vehicle_predictions(vehicle_ids):
     predictions = []
     for i in range(0, len(vehicle_ids), 25):
         ids = ",".join(vehicle_ids[i : i + 25])
-        data = get_json(f"/Vehicle/{ids}/Arrivals")
-        predictions.extend(data)
+        try:
+            data = get_json(f"/Vehicle/{ids}/Arrivals")
+            predictions.extend(data)
+        except Exception:
+            pass
     return predictions
 
 
@@ -233,9 +246,11 @@ def get_trains(station, start_time, arrival_time, minutes=30):
     logger.debug("Fetching arrivals for %s", station_id)
     end_time = arrival_time + timedelta(minutes=minutes)
     
-    # Use cached arrivals to prevent freezing/timeouts
-    arrivals = get_cached_arrivals(station_id)
-    
+    try:
+        arrivals = get_cached_arrivals(station_id)
+    except Exception:
+        return []
+
     arrivals = [
         a
         for a in arrivals
@@ -248,7 +263,6 @@ def get_trains(station, start_time, arrival_time, minutes=30):
     if not arrivals:
         return []
     
-    logger.debug("%d arrivals in window at %s", len(arrivals), station_id)
     trains = []
     vehicle_ids = list(set(a["vehicleId"] for a in arrivals))
     predictions = get_vehicle_predictions(vehicle_ids)
@@ -283,7 +297,11 @@ def get_trains(station, start_time, arrival_time, minutes=30):
         t.line = arrival.get("lineName", "")
         t.direction = arrival.get("direction", "")
         t.vehicle_id = vehicle_id
-        station_groups = get_station_order(timetable)
+        
+        try:
+            station_groups = get_station_order(timetable)
+        except (KeyError, IndexError):
+            continue
 
         for group in station_groups:
             stops = {}
@@ -294,7 +312,10 @@ def get_trains(station, start_time, arrival_time, minutes=30):
         for prediction in vehicles.get(vehicle_id, []):
             prediction_station = prediction.get("naptanId")
             if prediction_station:
-                prediction_station = get_station_id(prediction_station)
+                try:
+                    prediction_station = get_station_id(prediction_station)
+                except ValueError:
+                    continue
             elif prediction.get("stationName"):
                 try:
                     prediction_station = get_station_id(prediction["stationName"])
@@ -321,12 +342,11 @@ def _get_routes_for_line_cached(line_id: str, direction: str) -> tuple[tuple[str
 
 
 def heuristic(station, end_station, station_lat_lon, heuristic_type):
-    if heuristic_type == "dijkstra":
+    if heuristic_type == "dijkstra" or not station_lat_lon:
         return 0
     coord1 = station_lat_lon.get(station)
     coord2 = station_lat_lon.get(end_station)
     
-    # Fallback check to prevent TypeError if coordinates are missing
     if not coord1 or not coord2:
         return 0
 
@@ -355,22 +375,22 @@ def init_route(start_station, start_time):
     return initial_route
 
 
-def build_route(old_route, new_station, start_time, current_time, new_train):
-    next_route = Route(new_station, current_time)
+def build_route(old_route, new_station, start_time, arrival_time, ready_time, new_train):
+    next_route = Route(new_station, ready_time, arrival_time=arrival_time)
     next_route.current_trains = old_route.current_trains.copy()
     next_route.current_trains.append(new_train)
     next_route.trains = list(old_route.trains) + [new_train]
     next_route.parent = old_route
-    arrival_time = start_time + timedelta(minutes=current_time)
-    available_trains = get_trains(new_station, start_time, arrival_time)
+    
+    search_time = start_time + timedelta(minutes=ready_time)
+    available_trains = get_trains(new_station, start_time, search_time)
     
     for train in available_trains:
         for group in train.stops:
             for station_id, arrival in group.items():
                 if station_id == new_station:
                     continue
-                if arrival > current_time:
-                    # Check if this arrival time is faster than an existing one
+                if arrival > ready_time:
                     current = next_route.available_stations.get(station_id)
                     if current is None or arrival < current["time"]:
                         next_route.available_stations[station_id] = {
@@ -396,21 +416,21 @@ def astar_step(
                 train_arrival_time = details["time"]
                 effective_ready_time = train_arrival_time
 
-                # Check if it's a transfer
-                if current_route.parent is not None:
-                    previous_train = current_route.current_trains[-1] if current_route.current_trains else None
+                # Only add transfer penalty if we are switching between two different trains mid-journey
+                if current_route.current_trains:
+                    previous_train = current_route.current_trains[-1]
                     current_train = details["train"]
                     
-                    if previous_train is None or previous_train.vehicle_id != current_train.vehicle_id:
-                        effective_ready_time += time_to_change  # Add 5 mins transfer penalty for boarding the next train
+                    if previous_train.vehicle_id != current_train.vehicle_id:
+                        effective_ready_time += time_to_change
 
                 if (
                     station not in candidate_stations
-                    or effective_ready_time < candidate_stations[station]["time"]
+                    or effective_ready_time < candidate_stations[station]["ready_time"]
                 ):
                     candidate_stations[station] = {
-                        "time": train_arrival_time,          # Keep original train arrival time for the station
-                        "ready_time": effective_ready_time,  # When we are actually ready to depart/catch a connection
+                        "time": train_arrival_time,
+                        "ready_time": effective_ready_time,
                         "train": details["train"],
                         "route": current_route,
                     }
@@ -421,17 +441,18 @@ def astar_step(
 
     potential_times = {}
     for station in candidate_stations:
-        # Use the ready_time to calculate total score for A* priority
-        total_time_score = candidate_stations[station]["ready_time"] + heuristic(station, end_station, station_lat_lon, heuristic_type)
-        potential_times[station] = total_time_score
+        potential_time = candidate_stations[station]["ready_time"]
+        heuristic_value = heuristic(station, end_station, station_lat_lon, heuristic_type)
+        total_time = potential_time + heuristic_value
+        potential_times[station] = total_time
 
     new_station = min(potential_times, key=potential_times.get)
 
-    # Build the next route using the ready_time so the next train search starts *after* the transfer window
     next_route = build_route(
         candidate_stations[new_station]["route"],
         new_station,
         start_time,
+        candidate_stations[new_station]["time"],
         candidate_stations[new_station]["ready_time"],
         candidate_stations[new_station]["train"],
     )
@@ -471,13 +492,9 @@ def main(start_station, end_station, start_time):
 
 
 if __name__ == "__main__":
-    # Changed logging level to INFO so we can see console progress instead of a silent freeze
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
-    
     start_time = datetime.now(timezone.utc)
     for start, end in [
-        # ("Oxford Circus", "Green Park"),  # Shorter test route to confirm smooth performance
-        # ("King's Cross St. Pancras", "Waterloo"),
         ("Stratford", "Victoria"),
     ]:
         print(f"\nFinding route from {start} to {end}...")
