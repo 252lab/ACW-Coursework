@@ -270,6 +270,68 @@ def test_main_returns_none_when_destination_is_unreachable(monkeypatch):
 
     assert route is None
 
+def test_heuristic_is_zero_for_dijkstra():
+    assert heuristic("A", "B", {}, "dijkstra") == 0
+
+
+def test_heuristic_is_zero_when_coordinates_are_missing():
+    assert heuristic("A", "B", {}, "euclidean") == 0
+
+def test_get_station_order_filters_unknown_stations():
+    timetable = {
+        "timetable": {
+            "routes": [
+                {
+                    "stationIntervals": [
+                        {
+                            "intervals": [
+                                {
+                                    "stopId": "940GZZLUOXC",
+                                    "timeToArrival": 4,
+                                },
+                                {
+                                    "stopId": "UNKNOWN",
+                                    "timeToArrival": 5,
+                                },
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+
+    groups = get_station_order(timetable)
+
+    assert groups == [[("940GZZLUOXC", 4)]]
+
+def test_main_does_not_loop_back_to_start(monkeypatch):
+    journey = {
+        "Start": [
+            {"line": "Red", "stops": {"Mid": 5}},
+        ],
+        "Mid": [
+            {"line": "Red", "stops": {"Start": 3}},
+        ],
+    }
+
+    monkeypatch.setattr(
+        "app.main.get_trains",
+        make_fake_get_trains(journey),
+    )
+    monkeypatch.setattr(
+        "app.main.get_station_id",
+        lambda station: station,
+    )
+    monkeypatch.setattr(
+        "app.main.get_stations_lon_lat_dictionary",
+        lambda: {},
+    )
+
+    route = main("Start", "End", START_TIME)
+
+    assert route is None
+
 
 @pytest.mark.endtoend
 @pytest.mark.parametrize("name", MOCK_JOURNEYS)
