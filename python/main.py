@@ -413,7 +413,9 @@ def astar_step(
                     previous_train = current_route.current_trains[-1] if current_route.current_trains else None
                     current_train = details["train"]
                     
-                    if previous_train != current_train:
+                    # Compare vehicle IDs, not Train objects: get_trains creates new Train
+                    # objects on every call, so the same vehicle is never the same object.
+                    if previous_train is None or previous_train.vehicle_id != current_train.vehicle_id:
                         potential_time += time_to_change  # Only add 5 mins if it's a transfer
                 if (
                     station not in candidate_stations
