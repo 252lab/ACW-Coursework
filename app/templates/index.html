@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/forms.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/map.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/tabs.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/error.css') }}">
 
 <!-- header-->
 
@@ -107,12 +108,14 @@
 
                 </form>
 
+                <!-- handing error message popups  -->
                 {% with messages = get_flashed_messages() %}
                 {% if messages %}
                 <ul class=flashes>
-                    {% for message in messages %}
-                    <li>{{ message }}</li>
-                    {% endfor %}
+                    <class alert error>
+                      <!-- only getting first error as multiple errors can be triggered at the same time-->  
+                        <li>{{ messages[0] }}</li>
+                    </class>
                 </ul>
                 {% endif %}
                 {% endwith %}
