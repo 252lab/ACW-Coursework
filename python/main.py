@@ -423,10 +423,10 @@ if __name__ == "__main__":
     start_time = datetime.now(timezone.utc)
     for start, end in [
         ("Baker Street", "Bank"),
-        ("King's Cross St. Pancras", "Waterloo"),
-        ("Stratford", "Victoria"),
-        ("Canary Wharf", "Liverpool Street"),
-        ("Oxford Circus", "Wimbledon"),
+        # ("King's Cross St. Pancras", "Waterloo"),
+        # ("Stratford", "Victoria"),
+        # ("Canary Wharf", "Liverpool Street"),
+        # ("Oxford Circus", "Wimbledon"),
     ]:
         route = main(start, end, start_time)
         if route is None:
