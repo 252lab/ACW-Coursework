@@ -552,6 +552,10 @@ def route_input():
 
             # Backend called
             route = main(startLocation, endLocation, startTime)
+
+            if route is None:
+                return error_found("No route could be found.")
+
             string_journey = format_route(route, startTime)
 
             return show_route(string_journey)
@@ -564,44 +568,9 @@ def route_input():
 #checking if the station is valid
 # return station ID if found
 def find_station(stationName):
-
-    # converting the station name to lower case and removing any extra paces    
-    toMatch = (
-        str(stationName)
-        .strip()
-        .lower()
-        .replace("’", "'")
-        .replace(" ", "")
-    )
-
-    # searching the array of stations for a match
     try:
-        # getting the list of stations
-        station_list = list_stations()
-
-        print(station_list[1])
-
-        if station_list is None or len(station_list) == 0:
-            return -1
-
-        # searching through list of stations
-        for name, station_id in station_list:
-            normalised_name = (
-                str(name)
-                .strip()
-                .lower()
-                .replace("’", "'")
-                .replace(" ", "")
-            )
-
-            # returning station if found
-            if normalised_name == toMatch:
-                return str(station_id)
-
-        return -1     
-    
-    # exception handling
-    except Exception:
+        return get_station_id(stationName)
+    except (ValueError, KeyError, AttributeError):
         return -1
 
 # function used to check if stations can be matched to API
@@ -642,10 +611,18 @@ def validate_inputs(startLocation, endLocation, startTime):
     # validating time inputs
     try:
         # if no time is entered, get the current time as the start time
-        if (startTime == ""):
+        if startTime == "":
             startTime = datetime.now(timezone.utc)
+        else:
+            now = datetime.now(timezone.utc)
+            startTime = datetime.strptime(startTime, "%H:%M").replace(
+                year=now.year,
+                month=now.month,
+                day=now.day,
+                tzinfo=timezone.utc,
+            )
             
-    except:
+    except Exception:
         # outputting error
         message = "Couldn't validate time inputs."
         return error_found(message)
