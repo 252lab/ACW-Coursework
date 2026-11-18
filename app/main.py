@@ -6,7 +6,8 @@ import numpy
 import flask
 from flask_frozen import Freezer
 import datetime
-from flask import Flask, render_template, request, Markup, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash
+from markupsafe import Markup
 
 app = Flask(__name__,template_folder="../templates")
 freezer = Freezer(app)
@@ -74,7 +75,7 @@ This subroutine is used to retrieve the form inputs from the index.html page, an
 If they inputs are not valid, an error message will be displayed and the user will be promted to re-enter their
 inputs. If the inputs are valid, they will then be sent to the algorithm.
 """
-@app.route("/route_input", methods=["GET", "POST"])
+@app.route("/route_input", methods=["POST"])
 def route_input():
 
     # switching to loading page while back end is running
