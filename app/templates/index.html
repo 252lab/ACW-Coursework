@@ -54,6 +54,20 @@
                 </p>
                 <br>
 
+                <!-- handing error message popups  -->
+                {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                <ul class=flashes>
+                        <div style="text-align: center;" class="alert error">
+                      <!-- only getting first error as multiple errors can be triggered at the same time-->  
+                        {{ messages[0] }}
+                        <br>
+                        </div>
+                </ul>
+                {% endif %}
+                {% endwith %}
+                {% block body %}{% endblock %}
+
                 <!-- input form-->
                 <form id="routeForm" style="text-align: center;" action="{{url_for('route_input', filename='main.py')}}"
                     method="post">
@@ -107,19 +121,6 @@
                     <input type="submit" value="Submit">
 
                 </form>
-
-                <!-- handing error message popups  -->
-                {% with messages = get_flashed_messages() %}
-                {% if messages %}
-                <ul class=flashes>
-                    <class alert error>
-                      <!-- only getting first error as multiple errors can be triggered at the same time-->  
-                        <li>{{ messages[0] }}</li>
-                    </class>
-                </ul>
-                {% endif %}
-                {% endwith %}
-                {% block body %}{% endblock %}
 
             </div>
 
