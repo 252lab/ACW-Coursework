@@ -503,21 +503,6 @@ def main(start_station, end_station, start_time):
             logger.debug("Route complete: %s", route_stations(next_route))
             route_found = True
 
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
-    start_time = datetime.now(timezone.utc)
-    for start, end in [
-        ("Stratford", "Victoria"),
-    ]:
-        print(f"\nFinding route from {start} to {end}...")
-        route = main(start, end, start_time)
-        if route is None:
-            print(f"No route found from {start} to {end}.")
-        else:
-            print("\n" + format_route(route, start_time))
-
-
 # rendering the starting page
 @app.route("/")
 def index_page():
@@ -566,9 +551,11 @@ def route_input():
             # call function to validate inputs (and update then when necessary)
             startLocation, endLocation, startTime = validate_inputs(startLocation, endLocation, startTime)
 
-            #TODO - BACKEND STARTS HERE!!!!
+            # Backend called
+            route = main(startLocation, endLocation, startTime)
+            string_journey = format_route(route, start_time)
 
-            return show_route()
+            return show_route(string_journey)
 
         except:
              message = "Form elements cannot be retrieved."
@@ -727,3 +714,22 @@ def show_route(text):
 if __name__ == "__main__":
     app.run(debug=True)
 
+
+"""
+if __name__ == "__main__":
+    app.run(debug=True)
+
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+    start_time = datetime.now(timezone.utc)
+    
+
+    for start, end in [
+        ("Stratford", "Victoria"),
+    ]:
+        print(f"\nFinding route from {start} to {end}...")
+        route = main(start, end, start_time)
+        if route is None:
+            print(f"No route found from {start} to {end}.")
+        else:
+            print("\n" + format_route(route, start_time))
+"""
