@@ -95,6 +95,8 @@ def route_input():
 
             #TODO - BACKEND STARTS HERE!!!!
 
+            return show_route()
+
         except:
              message = "Form elements cannot be retrieved."
              return error_found(message)
@@ -103,7 +105,7 @@ def route_input():
 
 
 
-# function used to check if stations can be matched to API - TODO
+# function used to check if stations can be matched to API
 # also checks that the user has only entered one of the start and end time
 def validate_inputs(startLocation, endLocation, startTime):
 
@@ -236,11 +238,9 @@ def error_found(message):
 def show_route(text):
 
     # initial route string
-    route_output = ""
+    route_output = "<br><p style='text-align: center; font-family: Arial, Helvetica, sans-serif;' >" + text + "</p><br>"
 
     try:
-
-        #TODO - set up route output
 
         # switching to the route page
         return render_template("route.html", injected_html=Markup(route_output))
