@@ -598,6 +598,7 @@ def find_station(stationName):
             if normalised_name == toMatch:
                 return str(station_id)
 
+        return -1     
     
     # exception handling
     except Exception:
