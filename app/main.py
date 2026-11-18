@@ -573,22 +573,26 @@ def find_station(stationName):
         # getting the list of stations
         station_list = list_stations()
 
+        print(station_list[1])
+
         if not station_list:
+            print("-1 returned")
             return -1
 
         # searching through list of stations
+
+        print("for loop reached")
         for x in station_list:
+            print(x)
 
             # returning station if found
             if x[0] == toMatch:
                 return x[1]
 
-        # return -1 if the station could not be found
-        return -1
     
     # exception handling
     except:
-        message = "Station not found."
+        message = "Station not found in database."
         error_found(message)
 
 # function used to check if stations can be matched to API
