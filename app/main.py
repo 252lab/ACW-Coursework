@@ -195,7 +195,6 @@ def get_stations_lon_lat_dictionary(
 
 
 def get_station_id(station):
-    station_str = str(station)
     if station_str.upper().startswith("9"):
         return station_str.upper()
 
@@ -562,7 +561,60 @@ def route_input():
                     
         return to_route()
 
+#checking if the station is valid
+# return station ID if found
+def find_station(stationName):
 
+    # check list of stations is returning stations, first element
+    # mid point of binary sort
+    # check that to match is the inputs being sent, lowercase and no spaces
+
+    # converting the station name to lower case and removing any extra paces
+    toMatch = stationName.lower().replace(" ", "")
+    print(toMatch)
+
+    found = False
+
+
+    # searching the array of stations fopr a match
+    try:
+        """
+        # getting array of stations
+        listStations = sorted(list_stations())
+
+        print(listStations[0])
+        # searching the array of stations for a match
+        start = 0
+        end = len(listStations) -1
+
+        while start <= end:
+            mid = (start+end) // 2
+            midpoint = listStations[mid][0]
+
+            if midpoint > toMatch:
+                end = mid -1
+
+            elif midpoint < toMatch:
+                start = mid + 1
+            else:
+                #return the Id of the station
+                return listStations[mid][1]
+
+        # return -1 if the station could not be found
+        return -1
+        """
+        list_stations = list_stations()
+
+        for x in list_stations:
+            if x[0] == toMatch:
+                return x[1]
+            else:
+                return -1
+        
+
+    except:
+        message = "find_station error"
+        error_found(message)
 
 # function used to check if stations can be matched to API
 # also checks that the user has only entered one of the start and end time
@@ -616,45 +668,6 @@ def validate_inputs(startLocation, endLocation, startTime):
     return startID, endID, startTime
 
 
-#checking if the station is valid
-# return station ID if found
-def find_station(stationName):
-
-    # converting the station name to lower case and removing any extra paces
-    toMatch = stationName.lower().replace(" ", "")
-    found = False
-
-
-    # searching the array of stations fopr a match
-    try:
-
-        # getting array of stations
-        listStations = sorted(list_stations())
-
-        # searching the array of stations for a match
-        start = 0
-        end = len(listStations) -1
-
-        while start <= end:
-            mid = (start+end) // 2
-            midpoint = listStations[mid][0]
-
-            if midpoint > toMatch:
-                end = mid -1
-
-            elif midpoint < toMatch:
-                start = mid + 1
-            else:
-                #return the Id of the station
-                return listStations[mid][1]
-
-        # return -1 if the station could not be found
-        return -1
-    
-    except:
-        message = "Something went wrong."
-        error_found(message)
-
 # returning the list of stations
 def list_stations():
     
@@ -669,16 +682,18 @@ def list_stations():
         # getting the tube stations
         tube_stations = df[df["UniqueId"].str.startswith("940GZZLU", na=False)]
 
+        print(tube_stations)
         # converting to an array
         # data should already be ordered as it is in the csv file
         tube_names = tube_stations[["Name", "UniqueId"]].to_numpy()
+
 
         # making the staion names lowercase and removing any spaces
         # for easier searching
         for i in range(0, len(tube_names)):
             tube_names[i][0]= tube_names[i][0].lower().replace(" ", "")
 
-        print(len(tube_names))
+        print(tube_names)
         # returning list of stations
         return tube_names
 
@@ -706,12 +721,13 @@ def show_route(text):
 
     # catches anything that goes wrong
     except:
-        message = "Something went wrong."
+        message = "Route output not working."
         error_found(message)
     
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 """
