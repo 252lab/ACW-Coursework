@@ -12,7 +12,6 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from dotenv import load_dotenv
 import requests
-import datetime
 from flask import Flask, render_template, request, redirect, url_for, flash
 from markupsafe import Markup
 import secrets
