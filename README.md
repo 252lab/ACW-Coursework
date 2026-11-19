@@ -2,8 +2,6 @@
 
 The project is focused on developing a route-planning website for journeys in London, using the A* algorithm. It allows the user to plan a journey between two stations using live updates from the tfl API.
 
-(NOTE: add more details once the project is finished)
-
 ## Problem and intended users
 
 Finding the most efficient public-transport route can require comparing multiple possible connections and journey times. This project aims to let a user provide a start stop, end stop, and a start time, and have the program calculate the most efficient route for them.
