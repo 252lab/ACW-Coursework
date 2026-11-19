@@ -115,9 +115,14 @@ python -m pip install -r requirements.txt
 
 ## Access and running
 
-- **Hosted website:** [https://252lab.github.io/ACW-Coursework](https://252lab.github.io/ACW-Coursework) - this is no longer the case
+Our website is not deployed on a server and so will need to be hosted on a local machine. This can be done with the following steps.
 
-(TODO: connect the backend to the frontend)
+- Within your terminal of choice navigate to the app folder within the project repository.
+- Run the main.py file.
+```sh
+python main.py
+```
+- Click the link produced by this in the terminal and this will open the website within your browser.
 
 ## Testing
 
@@ -178,5 +183,3 @@ External data and services:
 - **Rose Burston** Back-end development (hueristic function, fetching train lat and lon information), team coordination (meeting organisation), repository maintenance (README, algorithm complexity)
 - **Hannah Wagstaff** Back-end development (getting trains function, a* step function), algorithm design (object definition, algorithm logic), algorithm descriptions (Selected Algorithm, Algorithm Outline in the README)
 - **Nur Kinaci** Front-end development (HTML & CSS), reviewing and correcting Flask routing , file management, powerpoint
-
-**To do:** Each team member should review this summary and add any missing contributions.
