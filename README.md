@@ -54,7 +54,7 @@ S = Average number of stops per station
 
 O(K * (Nc * (T * S)))
 
-This is for the worst case scenario. As for each node which is explored in the A* algorithm (K) you must for each of it's neighbours (Nc) fetch all of it's trains (T) and then fetch each of those trains stops (S). Then comparisons are made to see which routes have the smallest heuristic, and once a rout/Node (K) is finally found for which it's destination station matches the desired end station then the algorithm stops.
+This is for the worst case scenario. As, for each node which is explored in the A* algorithm (K) you must for each of it's neighbours (Nc) fetch all of it's trains (T) and then fetch each of those trains stops (S). Then comparisons are made to see which routes have the smallest heuristic, and once a rout/Node (K) is finally found for which it's destination station matches the desired end station then the algorithm stops.
 
 ## Installation
 
