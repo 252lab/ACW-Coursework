@@ -1,4 +1,6 @@
 import json
+import re
+from difflib import SequenceMatcher
 import pandas as pd
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -32,15 +34,76 @@ logger = logging.getLogger(__name__)
 
 BASE_URL = "https://api.tfl.gov.uk"
 
+
+class TfLAPIError(Exception):
+    """An API failure with a safe, user-facing explanation."""
+
+    def __init__(self, message, status_code=None):
+        super().__init__(message)
+        self.status_code = status_code
+
+
+def _tfl_resource_name(path):
+    if path.startswith("/StopPoint/"):
+        return "live station arrivals"
+    if path.startswith("/Vehicle/"):
+        return "live train predictions"
+    if "/Timetable/" in path:
+        return "train timetable"
+    return "TfL service data"
+
+
+def _describe_tfl_request_error(error, path):
+    resource = _tfl_resource_name(path)
+    response = getattr(error, "response", None)
+    status_code = response.status_code if response is not None else None
+
+    if status_code == 429:
+        message = f"TfL is temporarily limiting requests for {resource}. Please try again shortly."
+    elif status_code is not None and status_code >= 500:
+        message = f"TfL's {resource} service is temporarily unavailable (HTTP {status_code}). Please try again shortly."
+    elif status_code is not None:
+        message = f"TfL could not provide {resource} (HTTP {status_code}). Please check the station details or try again later."
+    elif isinstance(error, requests.exceptions.Timeout):
+        message = f"The request for {resource} timed out. Please try again."
+    else:
+        message = f"Could not connect to TfL to retrieve {resource}. Please check your connection and try again."
+
+    return TfLAPIError(message, status_code=status_code)
+
 """Opening the NAPTAN json to avoid constantly reopening it"""
 with (Path(__file__).with_name("naptan.json")).open(encoding="utf-8") as f:
     NAPTAN = json.load(f)
 
 def normalize_station_name(name):
-    return name.replace("’", "'").casefold().strip()
+    normalized = name.replace("’", "'").replace("&", " and ").casefold()
+    return re.sub(r"[^a-z0-9]+", " ", normalized).strip()
 
 STATION_NAMES = {s["naptanID"]: s["commonName"] for s in NAPTAN}
 STATION_IDS = {normalize_station_name(s["commonName"]): s["naptanID"] for s in NAPTAN}
+STATION_IDS_BY_NAME = {s["commonName"]: s["naptanID"] for s in NAPTAN}
+STATION_NAME_CANDIDATES = {}
+for station in NAPTAN:
+    raw_name = station["commonName"]
+    name_variants = {normalize_station_name(raw_name)}
+    # Parenthetical line labels distinguish some same-named stations.
+    name_variants.add(normalize_station_name(re.sub(r"\([^)]*\)", "", raw_name)))
+    for variant in tuple(name_variants):
+        for suffix in (" underground station", " rail station"):
+            if variant.endswith(suffix):
+                name_variants.add(variant.removesuffix(suffix))
+    for variant in name_variants:
+        STATION_NAME_CANDIDATES.setdefault(variant, set()).add(station["naptanID"])
+
+# These are commonly used names that differ substantially from TfL's labels.
+STATION_ALIASES = {
+    "kings cross": STATION_IDS_BY_NAME["King's Cross St. Pancras Underground Station"],
+    "heathrow terminals 1 2 and 3": STATION_IDS_BY_NAME[
+        "Heathrow Terminals 2 & 3 Underground Station"
+    ],
+}
+for alias, station_id in STATION_ALIASES.items():
+    STATION_NAME_CANDIDATES.setdefault(normalize_station_name(alias), set()).add(station_id)
 EST_MAX_TRAIN_SPEED = 60 # tfl says that trains can reach about 60 mph
 
 SESSION = requests.Session()
@@ -155,9 +218,19 @@ def format_route(route, start_time):
 
 def get_json(path):
     params = {"app_key": APP_KEY} if APP_KEY else None
-    response = SESSION.get(f"{BASE_URL}{path}", params=params, timeout=15)
-    response.raise_for_status()
-    return response.json()
+    try:
+        response = SESSION.get(f"{BASE_URL}{path}", params=params, timeout=15)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as error:
+        raise _describe_tfl_request_error(error, path) from error
+
+    try:
+        return response.json()
+    except ValueError as error:
+        resource = _tfl_resource_name(path)
+        raise TfLAPIError(
+            f"TfL returned an unreadable response for {resource}. Please try again later."
+        ) from error
 
 
 def get_cached_arrivals(station_id):
@@ -207,6 +280,32 @@ def get_station_id(station):
         station_id = STATION_IDS.get(key)
         if station_id:
             return station_id
+
+    normalized_input = normalize_station_name(station_str)
+    exact_candidates = STATION_NAME_CANDIDATES.get(normalized_input, set())
+    if len(exact_candidates) == 1:
+        return next(iter(exact_candidates))
+    if len(exact_candidates) > 1:
+        raise ValueError(f"Ambiguous station name: {station}")
+
+    if len(normalized_input) >= 5:
+        candidate_scores = {}
+        for candidate_name, station_ids in STATION_NAME_CANDIDATES.items():
+            score = SequenceMatcher(None, normalized_input, candidate_name).ratio()
+            for station_id in station_ids:
+                candidate_scores[station_id] = max(candidate_scores.get(station_id, 0), score)
+
+        best_score = max(candidate_scores.values(), default=0)
+        if best_score >= 0.84:
+            best_ids = {
+                station_id
+                for station_id, score in candidate_scores.items()
+                if best_score - score <= 0.03
+            }
+            if len(best_ids) == 1:
+                return next(iter(best_ids))
+            raise ValueError(f"Ambiguous station name: {station}")
+
     raise ValueError(f"Station not found: {station}")
 
 
@@ -245,12 +344,7 @@ def get_station_order(timetable):
 
 @lru_cache(maxsize=None)
 def get_timetable(line_id, from_id, to_id):
-    try:
-        return get_json(f"/Line/{line_id}/Timetable/{from_id}/to/{to_id}")
-    except requests.exceptions.HTTPError as e:
-        if e.response is not None and e.response.status_code == 429:
-            raise
-        return None
+    return get_json(f"/Line/{line_id}/Timetable/{from_id}/to/{to_id}")
 
 
 def get_trains(station, start_time, arrival_time, minutes=30):
@@ -258,10 +352,7 @@ def get_trains(station, start_time, arrival_time, minutes=30):
     logger.debug("Fetching arrivals for %s", station_id)
     end_time = arrival_time + timedelta(minutes=minutes)
     
-    try:
-        arrivals = get_cached_arrivals(station_id)
-    except Exception:
-        return []
+    arrivals = get_cached_arrivals(station_id)
 
     arrivals = [
         a
@@ -560,9 +651,12 @@ def route_input():
 
             return show_route(string_journey)
 
-        except:
-             message = "Form elements cannot be retrieved."
-             return error_found(message)
+        except TfLAPIError as error:
+            logger.warning("TfL API request failed: %s", error)
+            return error_found(str(error))
+        except Exception:
+            logger.exception("Unexpected error while planning route")
+            return error_found("An unexpected error occurred while planning your route. Please try again.")
                     
 
 #checking if the station is valid

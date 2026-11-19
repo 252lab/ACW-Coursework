@@ -4,6 +4,7 @@ import pytest
 import requests
 
 from app.main import (
+    TfLAPIError,
     Train,
     Route,
     _get_routes_for_line_cached,
@@ -14,6 +15,7 @@ from app.main import (
     get_trains,
     main,
     route_stations,
+    app as flask_app,
 )
 
 # Types of tests:
@@ -39,7 +41,7 @@ def test_get_json_valid_url():
 
 @pytest.mark.integration
 def test_get_json_invalid_url():
-    with pytest.raises(requests.exceptions.RequestException):
+    with pytest.raises(TfLAPIError, match="HTTP 404"):
         get_json("/invalid/url")
 
 
@@ -50,8 +52,29 @@ def test_get_json_timeout(monkeypatch):
 
     monkeypatch.setattr("app.main.SESSION.get", fake_get)
 
-    with pytest.raises(requests.exceptions.RequestException):
+    with pytest.raises(TfLAPIError, match="timed out"):
         get_json("/Line/Mode/tube")
+
+
+def test_route_input_displays_tfl_api_error(monkeypatch):
+    monkeypatch.setattr(
+        "app.main.validate_inputs",
+        lambda *_: ("START", "END", START_TIME),
+    )
+
+    def raise_api_error(*_):
+        raise TfLAPIError("TfL's live station arrivals service is unavailable.")
+
+    monkeypatch.setattr("app.main.main", raise_api_error)
+    monkeypatch.setitem(flask_app.config, "TESTING", True)
+
+    response = flask_app.test_client().post(
+        "/route_input",
+        data={"startLocation": "Start", "endLocation": "End"},
+        follow_redirects=True,
+    )
+
+    assert b"TfL&#39;s live station arrivals service is unavailable." in response.data
 
 
 def test_get_station_id_short_and_full_name_match():
@@ -59,6 +82,24 @@ def test_get_station_id_short_and_full_name_match():
 
     assert get_station_id("Oxford Circus") == full
     assert get_station_id("oxford circus") == full
+
+
+def test_get_station_id_common_aliases():
+    assert get_station_id("Kings Cross") == get_station_id(
+        "King's Cross St. Pancras Underground Station"
+    )
+    assert get_station_id("Heathrow Terminals 1, 2 and 3") == get_station_id(
+        "Heathrow Terminals 2 & 3 Underground Station"
+    )
+
+
+def test_get_station_id_fuzzy_match():
+    assert get_station_id("Oxford Cirkus") == get_station_id("Oxford Circus")
+
+
+def test_get_station_id_rejects_ambiguous_name():
+    with pytest.raises(ValueError, match="Ambiguous station name"):
+        get_station_id("Hammersmith")
 
 
 def test_get_station_id_naptan_passthrough():
