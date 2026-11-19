@@ -12,6 +12,7 @@ from app.main import (
     heuristic,
     get_json,
     get_station_id,
+    get_timetable,
     get_trains,
     main,
     route_stations,
@@ -54,6 +55,32 @@ def test_get_json_timeout(monkeypatch):
 
     with pytest.raises(TfLAPIError, match="timed out"):
         get_json("/Line/Mode/tube")
+
+
+def test_get_timetable_returns_none_for_not_found(monkeypatch):
+    def fake_get_json(_path):
+        raise TfLAPIError("Timetable not found", status_code=404)
+
+    monkeypatch.setattr("app.main.get_json", fake_get_json)
+    get_timetable.cache_clear()
+
+    assert get_timetable("bakerloo", "from", "to") is None
+
+    get_timetable.cache_clear()
+
+
+def test_get_timetable_propagates_other_api_errors(monkeypatch):
+    def fake_get_json(_path):
+        raise TfLAPIError("Service unavailable", status_code=503)
+
+    monkeypatch.setattr("app.main.get_json", fake_get_json)
+    get_timetable.cache_clear()
+
+    with pytest.raises(TfLAPIError, match="Service unavailable") as error:
+        get_timetable("bakerloo", "from", "to")
+
+    assert error.value.status_code == 503
+    get_timetable.cache_clear()
 
 
 def test_route_input_displays_tfl_api_error(monkeypatch):

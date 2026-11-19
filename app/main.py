@@ -344,7 +344,18 @@ def get_station_order(timetable):
 
 @lru_cache(maxsize=None)
 def get_timetable(line_id, from_id, to_id):
-    return get_json(f"/Line/{line_id}/Timetable/{from_id}/to/{to_id}")
+    try:
+        return get_json(f"/Line/{line_id}/Timetable/{from_id}/to/{to_id}")
+    except TfLAPIError as error:
+        if error.status_code == 404:
+            logger.info(
+                "TfL has no timetable for line %s from %s to %s",
+                line_id,
+                from_id,
+                to_id,
+            )
+            return None
+        raise
 
 
 def get_trains(station, start_time, arrival_time, minutes=30):
