@@ -57,29 +57,36 @@ def test_get_json_timeout(monkeypatch):
         get_json("/Line/Mode/tube")
 
 
-def test_get_timetable_returns_none_for_not_found(monkeypatch):
+@pytest.mark.parametrize("status_code", [404, 500, 503])
+def test_get_timetable_logs_and_skips_unavailable_responses(
+    monkeypatch, caplog, status_code
+):
     def fake_get_json(_path):
-        raise TfLAPIError("Timetable not found", status_code=404)
+        raise TfLAPIError("Timetable unavailable", status_code=status_code)
 
     monkeypatch.setattr("app.main.get_json", fake_get_json)
     get_timetable.cache_clear()
 
-    assert get_timetable("bakerloo", "from", "to") is None
+    with caplog.at_level("WARNING", logger="app.main"):
+        assert get_timetable("bakerloo", "from", "to") is None
+
+    assert "status=" + str(status_code) in caplog.text
+    assert "/Line/bakerloo/Timetable/from/to/to" in caplog.text
 
     get_timetable.cache_clear()
 
 
-def test_get_timetable_propagates_other_api_errors(monkeypatch):
+def test_get_timetable_propagates_rate_limit_errors(monkeypatch):
     def fake_get_json(_path):
-        raise TfLAPIError("Service unavailable", status_code=503)
+        raise TfLAPIError("Rate limited", status_code=429)
 
     monkeypatch.setattr("app.main.get_json", fake_get_json)
     get_timetable.cache_clear()
 
-    with pytest.raises(TfLAPIError, match="Service unavailable") as error:
+    with pytest.raises(TfLAPIError, match="Rate limited") as error:
         get_timetable("bakerloo", "from", "to")
 
-    assert error.value.status_code == 503
+    assert error.value.status_code == 429
     get_timetable.cache_clear()
 
 

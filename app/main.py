@@ -344,15 +344,18 @@ def get_station_order(timetable):
 
 @lru_cache(maxsize=None)
 def get_timetable(line_id, from_id, to_id):
+    path = f"/Line/{line_id}/Timetable/{from_id}/to/{to_id}"
     try:
-        return get_json(f"/Line/{line_id}/Timetable/{from_id}/to/{to_id}")
+        return get_json(path)
     except TfLAPIError as error:
-        if error.status_code == 404:
-            logger.info(
-                "TfL has no timetable for line %s from %s to %s",
-                line_id,
-                from_id,
-                to_id,
+        if error.status_code == 404 or (
+            error.status_code is not None and error.status_code >= 500
+        ):
+            logger.warning(
+                "Skipping unavailable TfL timetable: status=%s path=%s error=%s",
+                error.status_code,
+                path,
+                error,
             )
             return None
         raise
