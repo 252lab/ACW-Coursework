@@ -177,5 +177,6 @@ External data and services:
 - **Laura Bonnelame:**  Front-end development (html, CSS & JavaScript files), input validation (from the html form), file management and the powerpoint
 - **Rose Burston** Back-end development (hueristic function, fetching train lat and lon information), team coordination (meeting organisation), repository maintenance (README, algorithm complexity)
 - **Hannah Wagstaff** Back-end development (getting trains function, a* step function), algorithm design (object definition, algorithm logic), algorithm descriptions (Selected Algorithm, Algorithm Outline in the README)
+- **Nur Kinaci** Front-end development (HTML & CSS), reviewing and correcting Flask routing , file management, powerpoint
 
 **To do:** Each team member should review this summary and add any missing contributions.
