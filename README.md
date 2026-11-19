@@ -42,13 +42,13 @@ This is the space complexity for the A* algorithm as all nodes must be kep track
 
 For our algorithm:
 
-Nt = Total number of candidate stations
+$`Nt`$ = Total number of candidate stations
 
-K = Total number of nodes expanded in search
+$`K`$ = Total number of nodes expanded in search
 
-T = The number of active trains fetched from the api for the given station
+$`T`$ = The number of active trains fetched from the api for the given station
 
-S = Average number of stops per station
+$`S`$ = Average number of stops per station
 
 $`(T * S)`$ = The cost of fetching, parsing and saving all valid timetables and stops for each train for a newly expanded station
 
