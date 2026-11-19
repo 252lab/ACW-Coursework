@@ -796,9 +796,6 @@ def show_route(text):
     # initial route string
     route_output = "<br>"
 
-    # initial route string
-    #route_output = "<br><p style='text-align: center; font-family: Arial, Helvetica, sans-serif;' >" + text + "</p><br>"
-
     try:
 
         # iterating through each step of the route
@@ -820,24 +817,3 @@ def show_route(text):
 
 if __name__ == "__main__":
     app.run(debug=True)
-
-
-
-"""
-if __name__ == "__main__":
-    app.run(debug=True)
-
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
-    start_time = datetime.now(timezone.utc)
-    
-
-    for start, end in [
-        ("Stratford", "Victoria"),
-    ]:
-        print(f"\nFinding route from {start} to {end}...")
-        route = main(start, end, start_time)
-        if route is None:
-            print(f"No route found from {start} to {end}.")
-        else:
-            print("\n" + format_route(route, start_time))
-"""

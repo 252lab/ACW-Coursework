@@ -113,7 +113,7 @@ python -m pip install -r requirements.txt
 
 ## Access and running
 
-- **Hosted website:** [https://252lab.github.io/ACW-Coursework](https://252lab.github.io/ACW-Coursework)
+- **Hosted website:** [https://252lab.github.io/ACW-Coursework](https://252lab.github.io/ACW-Coursework) - this is no longer the case
 
 (TODO: connect the backend to the frontend)
 
