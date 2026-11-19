@@ -195,6 +195,21 @@ Other: [please specify]
 
 I declare that I have referenced use of GenAI outputs within my assessment in line with the University referencing guidelines.
 GenAI links:
+
 https://share.google/aimode/7rQ6Jb1DXqMCzMTRG
+
 https://claude.ai/share/5cec665e-2c31-45e6-8d35-026eda7a6330
+
 https://share.gemini.google/F0rSXFpPeR3R
+
+Following code snippets
+```python
+tube_stations = stations_df[stations_df["UniqueId"].str.startswith("940GZZLU", na=False)]
+merged = pd.merge(
+        tube_stations[["UniqueId", "Name"]],
+        points_df[["StationUniqueId", "Lat", "Lon"]],
+        left_on="UniqueId",
+        right_on="StationUniqueId",
+        how="inner"
+    ).drop_duplicates(subset=["Name"])
+```
