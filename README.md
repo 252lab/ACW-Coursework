@@ -187,16 +187,16 @@ External data and services:
 The University of Exeter is committed to the ethical and responsible use of Generative AI (GenAI) tools in teaching and learning, in line with our academic integrity policies where the direct copying of AI-generated content is included under plagiarism, misrepresentation and contract cheating under definitions and offences in TQA Manual Chapter 12.3. To support students in their use of GenAI tools as part of their assessments, we have developed a category tool that enables staff to identify where use of Gen AI is integrated, supported or prohibited in each assessment. This assessment falls under the category of AI Assisted.
 
 AI-supported use is permitted in this assessment. I acknowledge the following uses of GenAI tools in this assessment:
-I have used GenAI tools to assist with research or gathering information.
-I have used GenAI tools to help me understand key theories and concepts.
-I have used GenAI tools to identify trends and themes as part of my data analysis.
-I have used GenAI tools to suggest a plan or structure for my assessment.
-I have used GenAI tools to give me feedback on a draft.
-I have used GenAI tool to generate image, figures or diagrams.
-I have used GenAI tools to proofread and correct grammar or spelling errors.
-I have used GenAI tools to generate citations or references.
+[Yes/No] I have used GenAI tools to assist with research or gathering information.
+[Yes] I have used GenAI tools to help me understand key theories and concepts.
+[Yes/No] I have used GenAI tools to identify trends and themes as part of my data analysis.
+[Yes/No] I have used GenAI tools to suggest a plan or structure for my assessment.
+[Yes/No] I have used GenAI tools to give me feedback on a draft.
+[Yes/No] I have used GenAI tool to generate image, figures or diagrams.
+[Yes/No] I have used GenAI tools to proofread and correct grammar or spelling errors.
+[Yes/No] I have used GenAI tools to generate citations or references.
 Other: [please specify]
-- Debugging code 
+- Proofreading and debugging code and test cases
 
 I declare that I have referenced use of GenAI outputs within my assessment in line with the University referencing guidelines.
 
