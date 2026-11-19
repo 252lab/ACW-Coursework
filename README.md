@@ -25,6 +25,26 @@ $$f(n) = g(n) + h(n)$$
 ### Complexity
 
 (NOTE: analyse the space-time complexity once the project has been finished)
+*A* algorithm base time and space complexities*
+Time complexity worst-case:
+O(b^d)
+Where b is the branching factor – the average number of edges from each node, and d is the number of nodes on the resulting path.
+The better the heuristic function the better the complexity is as fewer nodes are visited.
+The heuristic function can act as the effective branching factor, the average number of edges chosen to get to the optimal next node. So, the optimal hueristic would be 1, that for every node visited only one edge is taken (so, fewer nodes are visited and the optimal path is immediately taken).
+
+Space complexity:
+O(b^d)
+This is the space complexity for the A* algorithm as all nodes must be kep track of in the algorithm (closed list, open list, 
+
+For our algorithm:
+Nt = Total number of candidate stations
+K = Total number of nodes expanded in search
+T = The number of active trains fetched from the api for the given station
+S = Average number of stops per station
+(T * S) = The cost of fetching, parsing and saving all valid timetables and stops for each train for a newly expanded station
+
+O(K * (Nc * (T * S)))
+This is for the worst case scenario. As for each node which is explored in the A* algorithm (K) you must for each of it's neighbours (Nc) fetch all of it's trains (T) and then fetch each of those trains stops (S). Then comparisons are made to see which routes have the smallest heuristic, and once a rout/Node (K) is finally found for which it's destination station matches the desired end station then the algorithm stops.
 
 ## Installation
 
