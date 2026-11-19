@@ -18,6 +18,8 @@ This project uses A\* algorithm. A\* ranks a candidate station using the journey
 
 $$f(n) = g(n) + h(n)$$
 
+The A* Algorithm uses a priority queue system to sort through the list of explorable nodes. Each node in the queue has the above f(n) calculated, and the lowest score is added to the explored list, and its neighbours are added to the queue. This is repeated until the end node is added to the explored list.
+
 ### Algorithm outline
 
 Inputs: Start_Station, End_Station, Start_Time
