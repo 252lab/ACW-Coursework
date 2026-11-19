@@ -28,7 +28,7 @@ $$f(n) = g(n) + h(n)$$
 
 Time complexity worst-case:
 
-O(b^d)
+$`O(b^d)`$
 
 Where b is the branching factor – the average number of edges from each node, and d is the number of nodes on the resulting path.
 The better the heuristic function the better the complexity is as fewer nodes are visited.
