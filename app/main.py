@@ -76,6 +76,7 @@ with (Path(__file__).with_name("naptan.json")).open(encoding="utf-8") as f:
     NAPTAN = json.load(f)
 
 def normalize_station_name(name):
+    # Ignore case and punctuation so small formatting differences still match.
     normalized = name.replace("’", "'").replace("&", " and ").casefold()
     return re.sub(r"[^a-z0-9]+", " ", normalized).strip()
 
@@ -86,7 +87,7 @@ STATION_NAME_CANDIDATES = {}
 for station in NAPTAN:
     raw_name = station["commonName"]
     name_variants = {normalize_station_name(raw_name)}
-    # Parenthetical line labels distinguish some same-named stations.
+    # Add a version without the line label, e.g. "Hammersmith (H&C Line)".
     name_variants.add(normalize_station_name(re.sub(r"\([^)]*\)", "", raw_name)))
     for variant in tuple(name_variants):
         for suffix in (" underground station", " rail station"):
@@ -113,11 +114,13 @@ SESSION.mount("https://", HTTPAdapter(max_retries=Retry(
     respect_retry_after_header=True,
 )))
 
-# Cache live arrivals with TTL so we don't spam TfL or timeout
+# Reuse recent arrivals to reduce API requests.
 ARRIVAL_CACHE = {}
 ARRIVAL_CACHE_TTL_SECONDS = 30  
 
 class Train:
+    """A train and the stops it can reach."""
+
     def __init__(self):
         self.line = ""
         self.direction = ""
@@ -125,9 +128,12 @@ class Train:
         self.stops = []
 
 class Route:
+    """A station in a possible journey and the routes onward from it."""
+
     def __init__(self, station, current_time, arrival_time=None):
         self.station = station
-        self.current_time = current_time  # When we are ready / departing
+        # current_time includes any transfer wait; arrival_time does not.
+        self.current_time = current_time
         self.arrival_time = arrival_time if arrival_time is not None else current_time
 
         self.current_trains = []
@@ -159,6 +165,7 @@ def station_label(naptan_id):
 
 def format_route(route, start_time):
     """Return a readable, leg-by-leg description of a completed route, with correct times and wait durations."""
+    # Follow the parent links back to the start, then reverse to get journey order.
     stations = route_stations(route)
     
     nodes = []
@@ -178,6 +185,7 @@ def format_route(route, start_time):
 
         arrive_time = getattr(to_node, "arrival_time", to_node.current_time)
 
+        # Consecutive stops on one vehicle are shown as a single journey leg.
         if legs and legs[-1]["vehicle_id"] == train.vehicle_id:
             legs[-1]["to"] = stations[i + 1]
             legs[-1]["arrive"] = arrive_time
@@ -202,7 +210,7 @@ def format_route(route, start_time):
             prev_leg = legs[n - 2]
             transfer_wait = leg["depart"] - prev_leg["arrive"]
             
-            # Force the transfer wait to look at least like a valid 5 min transfer if the data collapsed it to 0
+            # Show at least five minutes if the API times leave no transfer gap.
             if transfer_wait <= 0:
                 transfer_wait = 5
                 leg["depart"] = prev_leg["arrive"] + transfer_wait
@@ -218,6 +226,7 @@ def format_route(route, start_time):
 
 
 def get_json(path):
+    # Add the optional API key and turn request failures into clear app errors.
     params = {"app_key": APP_KEY} if APP_KEY else None
     try:
         response = SESSION.get(f"{BASE_URL}{path}", params=params, timeout=15)
@@ -252,6 +261,7 @@ def get_stations_lon_lat_dictionary(
     / "tfl-stationdata-detailed"
     / "StationPoints.csv",
 ):
+    # Coordinates help estimate how far each candidate is from the destination.
     if not station_coord_csv.exists():
         return {}
     points = pd.read_csv(station_coord_csv)
@@ -270,6 +280,7 @@ def get_stations_lon_lat_dictionary(
 
 def get_station_id(station):
     station_str = str(station)
+    # NaPTAN IDs can be used directly; station names need matching.
     if station_str.upper().startswith("9"):
         return station_str.upper()
 
@@ -282,6 +293,7 @@ def get_station_id(station):
         if station_id:
             return station_id
 
+    # Try known name variants before attempting typo matching.
     normalized_input = normalize_station_name(station_str)
     exact_candidates = STATION_NAME_CANDIDATES.get(normalized_input, set())
     if len(exact_candidates) == 1:
@@ -291,6 +303,7 @@ def get_station_id(station):
 
     if len(normalized_input) >= 5:
         candidate_scores = {}
+        # Compare longer inputs only, to avoid guessing from short names.
         for candidate_name, station_ids in STATION_NAME_CANDIDATES.items():
             score = SequenceMatcher(None, normalized_input, candidate_name).ratio()
             for station_id in station_ids:
@@ -305,6 +318,7 @@ def get_station_id(station):
             }
             if len(best_ids) == 1:
                 return next(iter(best_ids))
+            # Similar matches are not safe to guess between.
             raise ValueError(f"Ambiguous station name: {station}")
 
     raise ValueError(f"Station not found: {station}")
@@ -312,12 +326,14 @@ def get_station_id(station):
 
 def get_vehicle_predictions(vehicle_ids):
     predictions = []
+    # TfL accepts a limited number of vehicle IDs in each request.
     for i in range(0, len(vehicle_ids), 25):
         ids = ",".join(vehicle_ids[i : i + 25])
         try:
             data = get_json(f"/Vehicle/{ids}/Arrivals")
             predictions.extend(data)
         except Exception:
+            # Timetable estimates are still usable if live predictions fail.
             pass
     return predictions
 
@@ -331,6 +347,7 @@ def calculate_times(start_time, scheduled, live):
 
 
 def get_station_order(timetable):
+    # Keep only timetable stops that are in our local station data.
     route_data = timetable["timetable"]["routes"][0]
     station_groups = []
     for interval_group in route_data["stationIntervals"]:
@@ -349,6 +366,7 @@ def get_timetable(line_id, from_id, to_id):
     try:
         return get_json(path)
     except TfLAPIError as error:
+        # A missing or temporarily unavailable schedule affects this train only. The search continues with other arrivals at the station.
         if error.status_code == 404 or (
             error.status_code is not None and error.status_code >= 500
         ):
@@ -367,6 +385,7 @@ def get_trains(station, start_time, arrival_time, minutes=30):
     logger.debug("Fetching arrivals for %s", station_id)
     end_time = arrival_time + timedelta(minutes=minutes)
     
+    # Only use trains arriving within the next time window.
     arrivals = get_cached_arrivals(station_id)
 
     arrivals = [
@@ -424,9 +443,13 @@ def get_trains(station, start_time, arrival_time, minutes=30):
         for group in station_groups:
             stops = {}
             for name, offset in group:
+                # Timetable offsets are relative to this train's predicted arrival
+                # at the boarding station, so convert them to journey minutes.
                 stops[name] = actual_arrival_mins + offset
             t.stops.append(stops)
 
+        # Prefer live vehicle predictions over timetable estimates where both
+        # describe the same stop.
         for prediction in vehicles.get(vehicle_id, []):
             prediction_station = prediction.get("naptanId")
             if prediction_station:
@@ -460,6 +483,7 @@ def _get_routes_for_line_cached(line_id: str, direction: str) -> tuple[tuple[str
 
 
 def heuristic(station, end_station, station_lat_lon, heuristic_type):
+    # Without coordinates, rank stations by journey time alone.
     if heuristic_type == "dijkstra" or not station_lat_lon:
         return 0
     coord1 = station_lat_lon.get(station)
@@ -477,6 +501,7 @@ def init_route(start_station, start_time):
     initial_route = Route(start_station, 0)
     trains = get_trains(start_station, start_time, start_time)
 
+    # Record the earliest arrival at each station from the start.
     for train in trains:
         for stop_group in train.stops:
             for station_id, arrival_time in stop_group.items():
@@ -500,6 +525,7 @@ def build_route(old_route, new_station, start_time, arrival_time, ready_time, ne
     next_route.trains = list(old_route.trains) + [new_train]
     next_route.parent = old_route
     
+    # Start looking for the next train after any transfer wait has passed.
     search_time = start_time + timedelta(minutes=ready_time)
     available_trains = get_trains(new_station, start_time, search_time)
     
@@ -530,11 +556,12 @@ def astar_step(
     candidate_stations = {}
     for current_route in explored_routes:
         for station, details in current_route.available_stations.items():
+            # Skip stations already visited and keep the earliest option per stop.
             if station not in explored_stations:
                 train_arrival_time = details["time"]
                 effective_ready_time = train_arrival_time
 
-                # Only add transfer penalty if we are switching between two different trains mid-journey
+                # Add a five-minute wait when changing to another train.
                 if current_route.current_trains:
                     previous_train = current_route.current_trains[-1]
                     current_train = details["train"]
@@ -559,6 +586,7 @@ def astar_step(
 
     potential_times = {}
     for station in candidate_stations:
+        # A* score: time so far plus estimated time to the destination.
         potential_time = candidate_stations[station]["ready_time"]
         heuristic_value = heuristic(station, end_station, station_lat_lon, heuristic_type)
         total_time = potential_time + heuristic_value
@@ -579,6 +607,7 @@ def astar_step(
 
 
 def main(start_station, end_station, start_time):
+    # Convert names to IDs so the route search uses consistent station keys.
     start_station = get_station_id(start_station)
     end_station = get_station_id(end_station)
 
@@ -591,6 +620,7 @@ def main(start_station, end_station, start_time):
     route_found = False
     explored_routes = [initial_route]
     explored_stations = [start_station]
+    # Keep searching until we reach the destination or run out of options.
     while not route_found:
         next_route, next_station = astar_step(
             explored_routes, explored_stations, start_time, end_station, station_lat_lon, heuristic_type="euclidean"
@@ -618,11 +648,11 @@ def index_page():
 def route_page():
     return render_template("route.html")
 
-#switching to index page
+# Return to the form after an error.
 def to_index():
     return redirect(url_for('index_page'))
 
-# switching to route page
+# Show the completed journey page.
 def to_route():
     return redirect(url_for('route_page'))
 
@@ -677,6 +707,7 @@ def route_input():
 #checking if the station is valid
 # return station ID if found
 def find_station(stationName):
+    # Use -1 to signal that the station name could not be matched.
     try:
         return get_station_id(stationName)
     except (ValueError, KeyError, AttributeError):
@@ -690,7 +721,7 @@ def validate_inputs(startLocation, endLocation, startTime):
     startID = ""
     endID = ""
     
-    #validating station names
+    # Check that the user entered two different stations and that both exist.
     try:
         # check if start station and end station can be found in the API/data
         if (startLocation.strip().lower() == endLocation.strip().lower()):
@@ -717,7 +748,7 @@ def validate_inputs(startLocation, endLocation, startTime):
         message = "Couldn't validate station inputs."
         return error_found(message)
     
-    # validating time inputs
+    # Use the current UTC time when no start time was entered.
     try:
         # if no time is entered, get the current time as the start time
         if startTime == "":
@@ -736,9 +767,7 @@ def validate_inputs(startLocation, endLocation, startTime):
         message = "Couldn't validate time inputs."
         return error_found(message)
 
-    # if all the inputs thaty have been entered are valid
-
-    # returning the validated inputs
+    # Return station IDs and a datetime to the route search.
     return startID, endID, startTime
 
 
@@ -755,14 +784,14 @@ def list_stations():
 
     try:
 
-        # reading from the csv file
+        # Read station names and IDs from the local TfL CSV.
         df = pd.read_csv(filepath)
 
         # auto-detect column names to prevent KeyErrors
         name_col = "Name" if "Name" in df.columns else ("CommonName" if "CommonName" in df.columns else df.columns[0])
         id_col = "UniqueId" if "UniqueId" in df.columns else ("StationUniqueId" if "StationUniqueId" in df.columns else df.columns[1])
 
-        # getting the tube stations
+        # Keep Underground stations only.
         tube_stations = df[df[id_col].str.startswith("940GZZLU", na=False)]
 
         # converting to an array
@@ -787,6 +816,7 @@ def list_stations():
 # outputs the error message
 # and returns to the index page
 def error_found(message):
+    # Flash the message once, then return to the homepage.
     flash(message, 'error')
     return to_index()
 
@@ -798,18 +828,17 @@ def show_route(text):
 
     try:
 
-        # iterating through each step of the route
+        # Put each journey line in its own paragraph.
         for i in text:
             # formatting the html code
             route_output = route_output + "<p style='text-align: center; font-family: Arial, Helvetica, sans-serif;' >" + i + "</p>"
 
-        # adding another break for formatting purposes
         route_output = route_output + "<br>"
 
         # switching to the route page
         return render_template("route.html", injected_html=Markup(route_output))
 
-    # catches anything that goes wrong
+    # Log rendering errors so they can be diagnosed.
     except:
         message = "Route output not working."
         error_found(message)
