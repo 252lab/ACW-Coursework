@@ -160,8 +160,10 @@ def test_get_routes_for_line_cached_valid():
 
 @pytest.mark.integration
 def test_get_routes_for_line_cached_invalid():
-    with pytest.raises(requests.exceptions.RequestException):
+    with pytest.raises(TfLAPIError) as error:
         _get_routes_for_line_cached("not-a-real-line", "inbound")
+
+    assert error.value.status_code == 404
 
 
 # MOCK DATA FOR OFFLINE ROUTE-FINDING TESTS
