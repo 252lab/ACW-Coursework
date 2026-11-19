@@ -6,7 +6,7 @@ The project is focused on developing a route-planning website for journeys in Lo
 
 ## Problem and intended users
 
-Finding the most efficient public-transport route can require comparing multiple possible connections and journey times. This project aims to let a user provide a start stop, end stop, and a start or end time, and have the program calculate the most efficient route for them.
+Finding the most efficient public-transport route can require comparing multiple possible connections and journey times. This project aims to let a user provide a start stop, end stop, and a start time, and have the program calculate the most efficient route for them.
 
 **Intended users:** People travelling around London who want help planning the most efficient journey along the tube network.
 
@@ -33,7 +33,7 @@ The implementation of the algorithm works as thus:
 
 ### Complexity
 
-*A* algorithm base time and space complexities*
+A* algorithm base time and space complexities
 
 Time complexity worst-case:
 
