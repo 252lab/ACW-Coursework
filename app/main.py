@@ -213,7 +213,8 @@ def format_route(route, start_time):
             f"{clock(leg['depart'])} {station_label(leg['from'])} → "
             f"{clock(leg['arrive'])} {station_label(leg['to'])}"
         )
-    return "\n".join(lines)
+    #return "\n".join(lines)
+    return lines
 
 
 def get_json(path):
@@ -793,9 +794,20 @@ def error_found(message):
 def show_route(text):
 
     # initial route string
-    route_output = "<br><p style='text-align: center; font-family: Arial, Helvetica, sans-serif;' >" + text + "</p><br>"
+    route_output = "<br>"
+
+    # initial route string
+    #route_output = "<br><p style='text-align: center; font-family: Arial, Helvetica, sans-serif;' >" + text + "</p><br>"
 
     try:
+
+        # iterating through each step of the route
+        for i in text:
+            # formatting the html code
+            route_output = route_output + "<p style='text-align: center; font-family: Arial, Helvetica, sans-serif;' >" + i + "</p>"
+
+        # adding another break for formatting purposes
+        route_output = route_output + "<br>"
 
         # switching to the route page
         return render_template("route.html", injected_html=Markup(route_output))
