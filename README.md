@@ -36,7 +36,7 @@ The heuristic function can act as the effective branching factor, the average nu
 
 Space complexity:
 
-O(b^d)
+$`O(b^d)`$
 
 This is the space complexity for the A* algorithm as all nodes must be kep track of in the algorithm (closed list, open list, 
 
@@ -50,9 +50,9 @@ T = The number of active trains fetched from the api for the given station
 
 S = Average number of stops per station
 
-(T * S) = The cost of fetching, parsing and saving all valid timetables and stops for each train for a newly expanded station
+$`(T * S)`$ = The cost of fetching, parsing and saving all valid timetables and stops for each train for a newly expanded station
 
-O(K * (Nc * (T * S)))
+$`O(K * (Nc * (T * S)))`$
 
 The above is the time complexity for the worste case scenario.
 
