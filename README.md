@@ -20,7 +20,16 @@ $$f(n) = g(n) + h(n)$$
 
 ### Algorithm outline
 
-(NOTE: fill this in once the project has been finished.)
+Inputs: Start_Station, End_Station, Start_Time
+
+The implementation of the algorithm works as thus:
+  1) Collect the list of stations that can be reached from the start station in a "route" object, that collects the station, available routes, and times those trains to those other stations leave.
+  2) Add the route object that was just collected to a list
+  3) For all route objects in the list, get the available stations, and calculate the heuristic + time for each of the available stations.
+  4) If there is a shorter path to an explored station in the list, replace the parent node of that station and update the new times.
+  5) Select the shortest time from the above calculation, and make a new route object with the parent node pointing to the previous step on the route.
+  6) Repeat steps 2-5 until the end station is found.
+  7) Reconstruct the shortest route from the chain of nodes and send it to the user. 
 
 ### Complexity
 
