@@ -67,11 +67,6 @@ The above is the time complexity for the worste case scenario.
 
 For each route/node (K) which is explored in the A* algorithm it must loop through each of its neighbours (Nt). Then for each of those neighbours it should then loop through every train (T) and fetch each of those trains stops (S). From the list of routes/nodes to be explored the route/node (K) with the shorted heuristic is selected for exploration. When the route/node (K) is selected, a comparison is made to see if the destination station for that route/node matches the desired end station then the algorithm stops, if not the algorithm must continue to loop through all of the available route/nodes in the open list check the neighbours, trains and stops for each until the destination is found.
 
-
-Link to gemini conversation:
-
-https://share.gemini.google/F0rSXFpPeR3R
-
 ## Installation
 
 ### Requirements
@@ -202,3 +197,4 @@ I declare that I have referenced use of GenAI outputs within my assessment in li
 GenAI links:
 https://share.google/aimode/7rQ6Jb1DXqMCzMTRG
 https://claude.ai/share/5cec665e-2c31-45e6-8d35-026eda7a6330
+https://share.gemini.google/F0rSXFpPeR3R
