@@ -194,7 +194,9 @@ Other: [please specify]
 - Proofreading and debugging code and test cases
 
 I declare that I have referenced use of GenAI outputs within my assessment in line with the University referencing guidelines.
-GenAI links:
+**GenAI usage:**
+
+Links:
 
 https://share.google/aimode/7rQ6Jb1DXqMCzMTRG
 
