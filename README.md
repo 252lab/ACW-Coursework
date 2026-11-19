@@ -1,6 +1,6 @@
 # ECM3428 — London Tube Route Planner
 
-The project is focused on developing a route-planning website for journeys in London, using the A* algorithm.
+The project is focused on developing a route-planning website for journeys in London, using the A* algorithm. It allows the user to plan a journey between two stations using live updates from the tfl API.
 
 (NOTE: add more details once the project is finished)
 
