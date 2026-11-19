@@ -181,3 +181,22 @@ External data and services:
 - **Rose Burston** Back-end development (hueristic function, fetching train lat and lon information), team coordination (meeting organisation), repository maintenance (README, algorithm complexity)
 - **Hannah Wagstaff** Back-end development (getting trains function, a* step function), algorithm design (object definition, algorithm logic), algorithm descriptions (Selected Algorithm, Algorithm Outline in the README)
 - **Nur Kinaci** Front-end development (HTML & CSS), reviewing and correcting Flask routing , file management, powerpoint
+
+## AI Statement - TODO
+
+The University of Exeter is committed to the ethical and responsible use of Generative AI (GenAI) tools in teaching and learning, in line with our academic integrity policies where the direct copying of AI-generated content is included under plagiarism, misrepresentation and contract cheating under definitions and offences in TQA Manual Chapter 12.3. To support students in their use of GenAI tools as part of their assessments, we have developed a category tool that enables staff to identify where use of Gen AI is integrated, supported or prohibited in each assessment. This assessment falls under the category of AI Assisted.
+
+AI-supported use is permitted in this assessment. I acknowledge the following uses of GenAI tools in this assessment:
+I have used GenAI tools to assist with research or gathering information.
+I have used GenAI tools to help me understand key theories and concepts.
+I have used GenAI tools to identify trends and themes as part of my data analysis.
+I have used GenAI tools to suggest a plan or structure for my assessment.
+I have used GenAI tools to give me feedback on a draft.
+I have used GenAI tool to generate image, figures or diagrams.
+I have used GenAI tools to proofread and correct grammar or spelling errors.
+I have used GenAI tools to generate citations or references.
+Other: [please specify]
+- Debugging code 
+
+I declare that I have referenced use of GenAI outputs within my assessment in line with the University referencing guidelines.
+
