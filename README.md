@@ -18,6 +18,8 @@ This project uses A\* algorithm. A\* ranks a candidate station using the journey
 
 $$f(n) = g(n) + h(n)$$
 
+The A* Algorithm uses a priority queue system to sort through the list of explorable nodes. Each node in the queue has the above f(n) calculated, and the lowest score is added to the explored list, and its neighbours are added to the queue. This is repeated until the end node is added to the explored list.
+
 ### Algorithm outline
 
 Inputs: Start_Station, End_Station, Start_Time
@@ -174,5 +176,6 @@ External data and services:
 - **Livia Banyai:** Back-end development (helper functions, caching), automated test suites (frontend and backend), repository maintenance (updating conftest.py, README, requirements.txt, etc.)
 - **Laura Bonnelame:**  Front-end development (html, CSS & JavaScript files), input validation (from the html form), file management and the powerpoint
 - **Rose Burston** Back-end development (hueristic function, fetching train lat and lon information), team coordination (meeting organisation), repository maintenance (README, algorithm complexity)
+- **Hannah Wagstaff** Back-end development (getting trains function, a* step function), algorithm design (object definition, algorithm logic), algorithm descriptions (Selected Algorithm, Algorithm Outline in the README)
 
 **To do:** Each team member should review this summary and add any missing contributions.
