@@ -1,8 +1,6 @@
 # ECM3428 — London Tube Route Planner
 
-The project is focused on developing a route-planning website for journeys in London, using the A* algorithm.
-
-(NOTE: add more details once the project is finished)
+The project is focused on developing a route-planning website for journeys in London, using the A* algorithm. It allows the user to plan a journey between two stations using live updates from the tfl API.
 
 ## Problem and intended users
 
@@ -115,9 +113,14 @@ python -m pip install -r requirements.txt
 
 ## Access and running
 
-- **Hosted website:** [https://252lab.github.io/ACW-Coursework](https://252lab.github.io/ACW-Coursework) - this is no longer the case
+Our website is not deployed on a server and so will need to be hosted on a local machine. This can be done with the following steps.
 
-(TODO: connect the backend to the frontend)
+- Within your terminal of choice navigate to the app folder within the project repository.
+- Run the main.py file.
+```sh
+python main.py
+```
+- Click the link produced by this in the terminal and this will open the website within your browser.
 
 ## Testing
 
@@ -177,5 +180,4 @@ External data and services:
 - **Laura Bonnelame:**  Front-end development (html, CSS & JavaScript files), input validation (from the html form), file management and the powerpoint
 - **Rose Burston** Back-end development (hueristic function, fetching train lat and lon information), team coordination (meeting organisation), repository maintenance (README, algorithm complexity)
 - **Hannah Wagstaff** Back-end development (getting trains function, a* step function), algorithm design (object definition, algorithm logic), algorithm descriptions (Selected Algorithm, Algorithm Outline in the README)
-
-**To do:** Each team member should review this summary and add any missing contributions.
+- **Nur Kinaci** Front-end development (HTML & CSS), reviewing and correcting Flask routing , file management, powerpoint
