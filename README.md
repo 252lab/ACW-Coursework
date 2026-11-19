@@ -54,7 +54,14 @@ S = Average number of stops per station
 
 O(K * (Nc * (T * S)))
 
-This is for the worst case scenario. As, for each node which is explored in the A* algorithm (K) you must for each of it's neighbours (Nt) fetch all of it's trains (T) and then fetch each of those trains stops (S). Then comparisons are made to see which routes have the smallest heuristic, and once a rout/Node (K) is finally found for which it's destination station matches the desired end station then the algorithm stops.
+The above is the time complexity for the worste case scenario.
+
+For each route/node (K) which is explored in the A* algorithm it must loop through each of its neighbours (Nt). Then for each of those neighbours it should then loop through every train (T) and fetch each of those trains stops (S). From the list of routes/nodes to be explored the route/node (K) with the shorted heuristic is selected for exploration. When the route/node (K) is selected, a comparison is made to see if the destination station for that route/node matches the desired end station then the algorithm stops, if not the algorithm must continue to loop through all of the available route/nodes in the open list check the neighbours, trains and stops for each until the destination is found.
+
+
+Link to gemini conversation:
+
+https://share.gemini.google/F0rSXFpPeR3R
 
 ## Installation
 
