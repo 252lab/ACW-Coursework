@@ -8,6 +8,7 @@ from app.main import (
     Train,
     Route,
     _get_routes_for_line_cached,
+    astar_step,
     get_station_order,
     heuristic,
     get_json,
@@ -353,6 +354,45 @@ def test_heuristic_is_zero_for_dijkstra():
 
 def test_heuristic_is_zero_when_coordinates_are_missing():
     assert heuristic("A", "B", {}, "euclidean") == 0
+
+
+@pytest.mark.parametrize(
+    ("previous_vehicle_id", "next_vehicle_id", "expected_ready_time"),
+    [
+        ("train-1", "train-1", 12),
+        ("train-1", "train-2", 17),
+    ],
+)
+def test_astar_step_adds_transfer_wait_only_when_changing_vehicles(
+    monkeypatch, previous_vehicle_id, next_vehicle_id, expected_ready_time
+):
+    previous_train = Train()
+    previous_train.vehicle_id = previous_vehicle_id
+
+    next_train = Train()
+    next_train.vehicle_id = next_vehicle_id
+
+    current_route = Route("Start", 0)
+    current_route.current_trains = [previous_train]
+    current_route.available_stations = {
+        "Mid": {"time": 12, "train": next_train},
+    }
+
+    # No further connections are needed to inspect the time assigned to Mid.
+    monkeypatch.setattr("app.main.get_trains", lambda *_args, **_kwargs: [])
+
+    next_route, station = astar_step(
+        [current_route],
+        ["Start"],
+        START_TIME,
+        "End",
+        {},
+    )
+
+    assert station == "Mid"
+    assert next_route.arrival_time == 12
+    assert next_route.current_time == expected_ready_time
+
 
 def test_get_station_order_filters_unknown_stations():
     timetable = {
